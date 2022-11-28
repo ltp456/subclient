@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/url"
 	"os"
 	"os/signal"
@@ -80,13 +79,13 @@ func (ws *Ws) Exit() {
 func (ws *Ws) closeConn() {
 	err := ws.conn.Close()
 	if err != nil {
-		log.Printf("ws conn error: %v", err)
+		//log.Printf("ws conn error: %v", err)
 	}
 }
 
 func (ws *Ws) write() {
 	defer func() {
-		log.Printf("close websocket conn")
+		//log.Printf("close websocket conn")
 		ws.closeConn()
 	}()
 
@@ -99,16 +98,16 @@ func (ws *Ws) write() {
 			if ok {
 				err := ws.conn.WriteMessage(websocket.TextMessage, msg)
 				if err != nil {
-					log.Printf("write message error: %v \n", err)
+					//log.Printf("write message error: %v \n", err)
 				}
 			}
 
 		case <-ws.interrupt:
 			err := ws.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.Printf("os interrupt write message error: %v", err)
+				//log.Printf("os interrupt write message error: %v", err)
 			}
-			log.Printf("rev ws write os interrupt exit")
+			//log.Printf("rev ws write os interrupt exit")
 
 			return
 		case t := <-ticker.C:
@@ -116,17 +115,17 @@ func (ws *Ws) write() {
 			if err != nil {
 				reErr := ws.ReConnect()
 				if reErr != nil {
-					log.Printf("ws re connect error: %v", reErr)
+					//log.Printf("ws re connect error: %v", reErr)
 				}
-				log.Printf("write ping message error: %v", err)
+				//log.Printf("write ping message error: %v", err)
 			}
-			log.Printf("websocket ping message")
+			//log.Printf("websocket ping message")
 		case <-ws.exitSign:
 			err := ws.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.Printf("ws exit  write close message error: %v", err)
+				//log.Printf("ws exit  write close message error: %v", err)
 			}
-			log.Printf("rev ws write exit sign")
+			//log.Printf("rev ws write exit sign")
 
 			return
 		}
@@ -140,24 +139,24 @@ func (ws *Ws) read() {
 		mType, message, err := ws.conn.ReadMessage()
 		if err != nil {
 			time.Sleep(time.Duration(ws.heartTime) * time.Second)
-			log.Printf("ws read message error: %v", err)
+			//log.Printf("ws read message error: %v", err)
 		}
 		switch mType {
 		case websocket.TextMessage:
 			ws.readMsg <- message
 		case websocket.PongMessage:
-			log.Printf("websocket rec pong message")
+			//log.Printf("websocket rec pong message")
 		case websocket.CloseMessage:
-			log.Printf("websocket close message")
+			//log.Printf("websocket close message")
 			ws.Exit()
 			return
 		}
 		select {
 		case <-ws.exitSign:
-			log.Printf("rev ws read exit sign")
+			//log.Printf("rev ws read exit sign")
 			return
 		case <-ws.interrupt:
-			log.Printf("rev ws read os interrupt exit")
+			//log.Printf("rev ws read os interrupt exit")
 			return
 		default:
 
