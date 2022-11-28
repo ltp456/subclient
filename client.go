@@ -692,17 +692,29 @@ func (c *Client) get(path string, value interface{}) (err error) {
 }
 
 // --------------------------------
-//todo memory
-var cache sync.Map
+//todo memory  待测试
+//var cache sync.Map
+
+var cache Cache = Cache{
+	cache:     make(map[int64]chan []byte),
+	startTime: time.Now(),
+}
 
 func (c *Client) wsReq(param types.Params, value interface{}) error {
+	// todo reset memory
+	if cache.LimitTime() {
+		if cache.Len() > 0 {
+			time.Sleep(c.timeout)
+		}
+		cache.ReSet()
+	}
 	id := param.GetId()
 	sigChain := make(chan []byte, 1)
 	cache.Store(id, sigChain)
-	err := c.ws.WriteObj(param)
 	if c.debug {
 		fmt.Printf("ws req: %v %v \n", id, param.String())
 	}
+	err := c.ws.WriteObj(param)
 	if err != nil {
 		return err
 	}
@@ -749,8 +761,7 @@ func (c *Client) wsResp() {
 			}
 			key := commonResp.ID
 			if value, ok := cache.Load(key); ok {
-				sign := value.(chan []byte)
-				sign <- data
+				value <- data
 			}
 		case <-c.exit:
 			return
@@ -759,8 +770,13 @@ func (c *Client) wsResp() {
 }
 
 type Cache struct {
-	lock  sync.RWMutex
-	cache map[int64]chan []byte
+	lock      sync.RWMutex
+	cache     map[int64]chan []byte
+	startTime time.Time
+}
+
+func (c *Cache) LimitTime() bool {
+	return c.startTime.Before(time.Now().Add(-time.Hour))
 }
 
 func (c *Cache) Len() int {
@@ -771,9 +787,10 @@ func (c *Cache) ReSet() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.cache = make(map[int64]chan []byte)
+	c.startTime = time.Now()
 }
 
-func (c *Cache) Add(key int64, value chan []byte) {
+func (c *Cache) Store(key int64, value chan []byte) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.cache[key] = value
@@ -787,7 +804,7 @@ func (c *Cache) Delete(key int64) {
 	}
 }
 
-func (c *Cache) Get(key int64) (chan []byte, bool) {
+func (c *Cache) Load(key int64) (chan []byte, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	if value, ok := c.cache[key]; ok {
