@@ -692,7 +692,7 @@ func (c *Client) get(path string, value interface{}) (err error) {
 }
 
 // --------------------------------
-
+//todo memory
 var cache sync.Map
 
 func (c *Client) wsReq(param types.Params, value interface{}) error {
@@ -756,4 +756,42 @@ func (c *Client) wsResp() {
 			return
 		}
 	}
+}
+
+type Cache struct {
+	lock  sync.RWMutex
+	cache map[int64]chan []byte
+}
+
+func (c *Cache) Len() int {
+	return len(c.cache)
+}
+
+func (c *Cache) ReSet() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.cache = make(map[int64]chan []byte)
+}
+
+func (c *Cache) Add(key int64, value chan []byte) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.cache[key] = value
+}
+
+func (c *Cache) Delete(key int64) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if _, ok := c.cache[key]; ok {
+		delete(c.cache, key)
+	}
+}
+
+func (c *Cache) Get(key int64) (chan []byte, bool) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	if value, ok := c.cache[key]; ok {
+		return value, ok
+	}
+	return nil, false
 }
