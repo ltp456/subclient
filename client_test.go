@@ -22,11 +22,11 @@ var wsEndpoint = "wss://mainnet.ternoa.network"
 //var httpEndpoint = "https://rpc.polkadot.io" // http://127.0.0.1:9933
 
 //var wsEndpoint = "ws://127.0.0.1:9944/"    // ws://127.0.0.1:9944
-var httpEndpoint = "http://127.0.0.1" // http://127.0.0.1:9933
+//var httpEndpoint = "http://127.0.0.1" // http://127.0.0.1:9933
 
 func init() {
 
-	option := types.NewClientOption(wsEndpoint, httpEndpoint, []byte{42})
+	option := types.NewClientOption(wsEndpoint, "", []byte{42})
 	client, err = NewClient(option)
 	if err != nil {
 		panic(err)
@@ -339,7 +339,7 @@ func TestClient_SystemEvent(t *testing.T) {
 	//if err != nil {
 	//	panic(err)
 	//}
-	for start := uint64(3247571); start < 3247671; start++ {
+	for start := uint64(3247560); start < 3247690; start++ {
 		ext, err := client.Block(start)
 		if err != nil {
 			panic(err)
@@ -474,145 +474,7 @@ func TestClient_SystemEvents(t *testing.T) {
 }
 
 func TestWsClient(t *testing.T) {
-	// ws not support now ,just verify test on mainnet
-
-	defer client.Close()
-	count := 0
-	blockHash := ""
-	storage := ""
-	metadata := ""
-	block := &types.Block{}
-	var events []types.SystemEvent
-	isOK := true
-
-	go func() {
-		msgChain := client.ReadMsg()
-		for {
-			select {
-			case msg := <-msgChain:
-				//fmt.Printf("recv: %v \n", string(msg))
-				if count == 0 {
-					err := testCommResp(msg, &blockHash)
-					if err != nil {
-						panic(err)
-					}
-					fmt.Printf("recv block hash: %v \n", blockHash)
-					_, err = client.getBlock(blockHash)
-					if err != nil {
-						panic(err)
-					}
-				} else if count == 1 {
-
-					err := testCommResp(msg, &block)
-					if err != nil {
-						panic(err)
-					}
-					height, _ := block.Block.Header.GetHeight()
-					fmt.Printf("recv block: %v  \n", height)
-					storageKey, err := NewStorageKey(types.System, types.Events, []byte{0})
-					if err != nil {
-						panic(err)
-					}
-					_, err = client.StateGetStorage(storageKey, blockHash)
-					if err != nil {
-						panic(err)
-					}
-
-				} else if count == 2 {
-					err := testCommResp(msg, &storage)
-					if err != nil {
-						panic(err)
-					}
-					fmt.Printf("recv storage: %v \n", storage)
-					_, err = client.GetMetaData(blockHash)
-					if err != nil {
-						panic(err)
-					}
-
-				} else if count == 3 {
-					err := testCommResp(msg, &metadata)
-					if err != nil {
-						panic(err)
-					}
-					fmt.Printf("start decode storage: %v \n", blockHash)
-					decodeStorage, err := client.DynamicDecodeStorage(types.System, types.Events, strings.TrimPrefix(storage, "0x"), strings.TrimPrefix(metadata, "0x"))
-					if err != nil {
-						panic(err)
-					}
-					fmt.Printf("decode data: %v \n", decodeStorage)
-					err = json.Unmarshal([]byte(decodeStorage), &events)
-					if err != nil {
-						panic(err)
-					}
-					height, _ := block.Block.Header.GetHeight()
-					extrinsics, err := client.ParseExtrinsic(height, block.Block.Extrinsics, events)
-					if err != nil {
-						panic(err)
-					}
-					count = 0
-					blockHash = ""
-					storage = ""
-					metadata = ""
-					block = nil
-					events = nil
-					for _, ext := range extrinsics {
-						if ext.Module == types.Balances && ext.Event == types.Transfer {
-							bytes, err := json.Marshal(ext)
-							if err != nil {
-								panic(err)
-							}
-							fmt.Println(string(bytes))
-						}
-
-					}
-					fmt.Printf("--------------- %v ---------------- \n", len(extrinsics))
-					isOK = true
-					continue
-				}
-				count++
-
-			}
-
-		}
-	}()
-
-	//indexes := []uint64{11532855, 11532856, 11532857, 11328883, 11328884, 11328885, 10879370, 10879371, 10879372, 10655115, 10655116, 10655117, 10458575, 10458576, 10458577}
-	//for _, index := range indexes {
-	//	if isOK {
-	//		_, err := client.getBlockHash(index)
-	//		if err != nil {
-	//			panic(err)
-	//		}
-	//		isOK = false
-	//	}
-	//	for {
-	//		time.Sleep(2 * time.Second)
-	//		if isOK {
-	//			break
-	//		}
-	//	}
-	//
-	//}
-
-	index := uint64(3247571)
-	for index < 100000000000000 {
-		if isOK {
-			fmt.Println("send block: ", index)
-			_, err := client.getBlockHash(index)
-			if err != nil {
-				panic(err)
-			}
-			isOK = false
-			index++
-		}
-		for {
-			time.Sleep(6 * time.Second)
-			if isOK {
-				break
-			}
-		}
-	}
-
+	
 }
 
 func TestEvents(t *testing.T) {

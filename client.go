@@ -36,7 +36,7 @@ func NewClient(option types.ClientOption) (*Client, error) {
 		httpEndpoint: option.HttpEndpoint,
 		networkId:    option.NetworkId,
 		imp:          http.DefaultClient,
-		debug:        true,
+		debug:        false,
 		wsSwitch:     true,
 		timeout:      60 * time.Second,
 		exit:         make(chan string, 1),
@@ -697,7 +697,7 @@ var cache sync.Map
 
 func (c *Client) wsReq(param types.Params, value interface{}) error {
 	id := param.GetId()
-	sigChain := make(chan []byte)
+	sigChain := make(chan []byte, 1)
 	cache.Store(id, sigChain)
 	err := c.ws.WriteObj(param)
 	if c.debug {
