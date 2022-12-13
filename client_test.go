@@ -17,11 +17,11 @@ var client *Client
 var err error
 var networkId = []byte{42}
 
-var wsEndpoint = "wss://mainnet.ternoa.network"
+//var wsEndpoint = "wss://mainnet.ternoa.network"
 
 //var httpEndpoint = "https://rpc.polkadot.io" // http://127.0.0.1:9933
 
-//var wsEndpoint = "ws://127.0.0.1:9944/"    // ws://127.0.0.1:9944
+var wsEndpoint = "ws://127.0.0.1:9944/" // ws://127.0.0.1:9944
 //var httpEndpoint = "http://127.0.0.1" // http://127.0.0.1:9933
 
 func init() {
@@ -339,7 +339,7 @@ func TestClient_SystemEvent(t *testing.T) {
 	//if err != nil {
 	//	panic(err)
 	//}
-	for start := uint64(3247560); start < 3247690; start++ {
+	for start := uint64(1); start < 22; start++ {
 		ext, err := client.Block(start)
 		if err != nil {
 			panic(err)
@@ -474,7 +474,7 @@ func TestClient_SystemEvents(t *testing.T) {
 }
 
 func TestWsClient(t *testing.T) {
-	
+
 }
 
 func TestEvents(t *testing.T) {

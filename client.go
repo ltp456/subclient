@@ -702,7 +702,7 @@ var cache Cache = Cache{
 
 func (c *Client) wsReq(param types.Params, value interface{}) error {
 	// todo reset memory
-	if cache.LimitTime() {
+	if cache.CanClear() {
 		if cache.Len() > 0 {
 			time.Sleep(c.timeout)
 		}
@@ -775,7 +775,7 @@ type Cache struct {
 	startTime time.Time
 }
 
-func (c *Cache) LimitTime() bool {
+func (c *Cache) CanClear() bool {
 	return c.startTime.Before(time.Now().Add(-time.Hour))
 }
 
