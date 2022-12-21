@@ -1,32 +1,25 @@
 package subclient
 
 import (
-	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 	"subclient/types"
 	"testing"
-	"time"
 )
 
 var client *Client
 var err error
-var networkId = []byte{42}
+var networkId = []byte{0}
 
-//var wsEndpoint = "wss://mainnet.ternoa.network"
-
-//var httpEndpoint = "https://rpc.polkadot.io" // http://127.0.0.1:9933
-
-var wsEndpoint = "ws://127.0.0.1:9944/" // ws://127.0.0.1:9944
-//var httpEndpoint = "http://127.0.0.1" // http://127.0.0.1:9933
+//var wsEndpoint = "ws://127.0.0.1:9944"
+//var httpEndpoint = "http://127.0.0.1:9933"
+var wsEndpoint = "wss://rpc.polkadot.io"
+var httpEndpoint = "wss://rpc.polkadot.io"
 
 func init() {
-
-	option := types.NewClientOption(wsEndpoint, "", []byte{42})
+	option := types.NewClientOption(wsEndpoint, httpEndpoint, networkId)
 	client, err = NewClient(option)
 	if err != nil {
 		panic(err)
@@ -35,66 +28,18 @@ func init() {
 }
 
 func TestClient_scanBlock(t *testing.T) {
-	for i := 6; i < 7; i++ {
-		//0x280403000b922bf3288101
-		//0x55028400d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d01ba8e8b705f47e2c249b9d639152e348e7fc0a901b6536ea22c97b59bffdcfa1388464033ce99642e867d4babe7ff48c63ce95f9858e126aeed9c4c276592bf88350000000403007cfd77ad2295ba14174d377ef8ef17256ad715cf103f6547837809d4fbaf043b1b000080f64ae1c7022d15
-		blockHash, err := client.getBlockHash(uint64(i))
+	height, err := client.GetFinalHeight()
+	if err != nil {
+		panic(err)
+	}
+	for i := height; i < 10000000000000; i++ {
+		extrinsics, err := client.Block(height)
 		if err != nil {
 			panic(err)
 		}
-		block, err := client.getBlock(blockHash)
-		for _, v := range block.Block.Extrinsics {
-			fmt.Println(v)
-			bytes, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(string(bytes))
-		}
+		fmt.Printf("len: %v \n", len(extrinsics))
 	}
-}
 
-func TestClient_demo(t *testing.T) {
-	data, err := client.GetMetaData("")
-	if err != nil {
-		panic(err)
-	}
-	//bytes, err := hex.DecodeString(strings.TrimPrefix(data, "0x"))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println(string(bytes))
-	if err != nil {
-		panic(err)
-	}
-	file, err := os.Create("metadata.txt")
-	if err != nil {
-		panic(err)
-	}
-	_, err = file.Write([]byte(data))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(data)
-}
-
-func TestGetBlock(t *testing.T) {
-	//head, err := client.getFinalHead()
-	//if err != nil {
-	//	panic(err)
-	//}
-	block, err := client.getBlock("0xe17305fb9b18292e7129b95177c0e7bf39da368949d923ceb428ac24dd43f91e")
-	if err != nil {
-		panic(err)
-	}
-	for _, ext := range block.Block.Extrinsics {
-		fmt.Println(ext)
-		extCall, err := client.DecodeExtrinsic(ext)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(extCall)
-	}
 }
 
 func TestClient_PalletInfo(t *testing.T) {
@@ -334,24 +279,6 @@ func TestClient_json(t *testing.T) {
 	fmt.Println(u)
 }
 
-func TestClient_SystemEvent(t *testing.T) {
-	//height, err := client.GetFinalHeight()
-	//if err != nil {
-	//	panic(err)
-	//}
-	for start := uint64(1); start < 22; start++ {
-		ext, err := client.Block(start)
-		if err != nil {
-			panic(err)
-		}
-		for _, tx := range ext {
-			fmt.Println(tx)
-		}
-
-	}
-
-}
-
 func TestClient_ActiveEraInfo(t *testing.T) {
 	activeEraInfo, err := client.ActiveEraInfo()
 	if err != nil {
@@ -424,15 +351,6 @@ func TestClient_DynamicDecodeStorage(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	//var events []types.SystemEvent
-	//err = json.Unmarshal([]byte(decodeStorage), &events)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//for _, item := range events {
-	//	fmt.Println(item.Event)
-	//}
-
 	fmt.Println(decodeStorage)
 }
 
@@ -478,10 +396,7 @@ func TestWsClient(t *testing.T) {
 }
 
 func TestEvents(t *testing.T) {
-	//_, err := client.Block(98)
-	//if err != nil {
-	//	panic(err)
-	//}
+
 	resList := []string{
 		`[{"phase":{"name":"ApplyExtrinsic","values":[0]},"event":{"name":"System","values":[{"name":"ExtrinsicSuccess","values":{"dispatch_info":{"weight":{"ref_time":175517000},"class":{"name":"Mandatory","values":[]},"pays_fee":{"name":"Yes","values":[]}}}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Balances","values":[{"name":"Withdraw","values":{"who":[[212,53,147,199,21,253,211,28,97,20,26,189,4,169,159,214,130,44,133,88,133,76,205,227,154,86,132,231,165,109,162,125]],"amount":15100000280186545}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"System","values":[{"name":"NewAccount","values":{"account":[[160,200,26,192,153,155,152,189,138,174,246,230,87,106,59,191,71,227,63,0,99,55,250,87,16,55,183,183,168,168,2,4]]}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Balances","values":[{"name":"Endowed","values":{"account":[[160,200,26,192,153,155,152,189,138,174,246,230,87,106,59,191,71,227,63,0,99,55,250,87,16,55,183,183,168,168,2,4]],"free_balance":200000000000000000000000}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Balances","values":[{"name":"Transfer","values":{"from":[[212,53,147,199,21,253,211,28,97,20,26,189,4,169,159,214,130,44,133,88,133,76,205,227,154,86,132,231,165,109,162,125]],"to":[[160,200,26,192,153,155,152,189,138,174,246,230,87,106,59,191,71,227,63,0,99,55,250,87,16,55,183,183,168,168,2,4]],"amount":200000000000000000000000123456789123456789}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"TransactionPayment","values":[{"name":"TransactionFeePaid","values":{"who":[[212,53,147,199,21,253,211,28,97,20,26,189,4,169,159,214,130,44,133,88,133,76,205,227,154,86,132,231,165,109,162,125]],"actual_fee":15100000280186545,"tip":0}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"System","values":[{"name":"ExtrinsicSuccess","values":{"dispatch_info":{"weight":{"ref_time":193890000},"class":{"name":"Normal","values":[]},"pays_fee":{"name":"Yes","values":[]}}}}]},"topics":[]}]`,
 		`[{"phase":{"name":"ApplyExtrinsic","values":[0]},"event":{"name":"System","values":[{"name":"ExtrinsicSuccess","values":{"dispatch_info":{"weight":{"ref_time":175517000},"class":{"name":"Mandatory","values":[]},"pays_fee":{"name":"Yes","values":[]}}}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Balances","values":[{"name":"Withdraw","values":{"who":[[22,4,115,170,186,199,218,216,54,125,240,140,253,154,246,215,216,121,137,126,102,16,124,59,227,55,205,131,178,220,74,97]],"amount":32800002627760505}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Staking","values":[{"name":"Bonded","values":[[[22,4,115,170,186,199,218,216,54,125,240,140,253,154,246,215,216,121,137,126,102,16,124,59,227,55,205,131,178,220,74,97]],199999850000000000000000]}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Utility","values":[{"name":"ItemCompleted","values":[]}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Utility","values":[{"name":"ItemCompleted","values":[]}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Staking","values":[{"name":"ValidatorPrefsSet","values":[[[22,4,115,170,186,199,218,216,54,125,240,140,253,154,246,215,216,121,137,126,102,16,124,59,227,55,205,131,178,220,74,97]],{"commission":130000000,"blocked":false}]}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Utility","values":[{"name":"ItemCompleted","values":[]}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Utility","values":[{"name":"ItemCompleted","values":[]}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"Utility","values":[{"name":"BatchCompleted","values":[]}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"TransactionPayment","values":[{"name":"TransactionFeePaid","values":{"who":[[22,4,115,170,186,199,218,216,54,125,240,140,253,154,246,215,216,121,137,126,102,16,124,59,227,55,205,131,178,220,74,97]],"actual_fee":32800002627760505,"tip":0}}]},"topics":[]},{"phase":{"name":"ApplyExtrinsic","values":[1]},"event":{"name":"System","values":[{"name":"ExtrinsicSuccess","values":{"dispatch_info":{"weight":{"ref_time":2541723000},"class":{"name":"Normal","values":[]},"pays_fee":{"name":"Yes","values":[]}}}}]},"topics":[]}]`,
@@ -504,33 +419,4 @@ func TestEvents(t *testing.T) {
 
 		}
 	}
-}
-
-func testCommResp(data []byte, value interface{}) error {
-	commonResp := types.CommonResp{}
-	err := json.Unmarshal(data, &commonResp)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(commonResp.Result, value)
-}
-
-func TestDemo(t *testing.T) {
-
-	sig := make(chan string, 1)
-	go func() {
-		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-		select {
-		case <-ctx.Done():
-			fmt.Println("end")
-		case s := <-sig:
-			fmt.Println(s)
-		}
-
-	}()
-	time.Sleep(7 * time.Second)
-	sig <- "hell0"
-
-	time.Sleep(1 * time.Hour)
-
 }

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"net/url"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +18,6 @@ type Ws struct {
 	option      *WsOption
 	lock        sync.Mutex
 	isReConning bool
-	interrupt   chan os.Signal
 	writeMsg    chan []byte
 	readMsg     chan []byte
 	exitSign    chan string
@@ -32,12 +29,10 @@ func NewWs(endpoint string) (*Ws, error) {
 	if err != nil {
 		return nil, err
 	}
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
 	ws := &Ws{
-		conn:        conn,
-		endpoint:    endpoint,
-		interrupt:   interrupt,
+		conn:     conn,
+		endpoint: endpoint,
+
 		writeMsg:    make(chan []byte, 1000),
 		readMsg:     make(chan []byte, 1000),
 		exitSign:    make(chan string, 1),
@@ -102,14 +97,6 @@ func (ws *Ws) write() {
 				}
 			}
 
-		case <-ws.interrupt:
-			err := ws.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				//log.Printf("os interrupt write message error: %v", err)
-			}
-			//log.Printf("rev ws write os interrupt exit")
-
-			return
 		case t := <-ticker.C:
 			err := ws.conn.WriteMessage(websocket.PingMessage, []byte(t.String()))
 			if err != nil {
@@ -154,9 +141,6 @@ func (ws *Ws) read() {
 		select {
 		case <-ws.exitSign:
 			//log.Printf("rev ws read exit sign")
-			return
-		case <-ws.interrupt:
-			//log.Printf("rev ws read os interrupt exit")
 			return
 		default:
 
