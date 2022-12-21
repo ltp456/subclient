@@ -79,6 +79,6 @@ func (c *Client) ffiDecodeExtrinsic(raw string) (string, error) {
 }
 
 func (c *Client) free(value *C.char) error {
-	C.free(value)
+	C.free_res(value)
 	return nil
 }

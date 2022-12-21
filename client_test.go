@@ -38,6 +38,9 @@ func TestClient_scanBlock(t *testing.T) {
 			panic(err)
 		}
 		fmt.Printf("len: %v \n", len(extrinsics))
+		for _, item := range extrinsics {
+			fmt.Println(item)
+		}
 	}
 
 }
