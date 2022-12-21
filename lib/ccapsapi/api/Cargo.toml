@@ -9,7 +9,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-sp-core = { version = "6.0.0", default-features = false, git = "https://github.com/capsule-corp-ternoa/substrate",  tag = "ternoa-substrate-2022-09-01", features = ["full_crypto"] }
+sp-core = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch="polkadot-v0.9.29", features = ["full_crypto"] }
 ext = { path = "../ext", package = "ext" }
 sub_decode = { path = "../core" }
 
