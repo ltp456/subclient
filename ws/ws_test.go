@@ -53,7 +53,7 @@ func TestWs(t *testing.T) {
 	ws.Run()
 	time.Sleep(5 * time.Second)
 	//ws.Exit()
-	ws.closeConn()
+	ws.Close()
 
 	time.Sleep(10 * time.Minute)
 

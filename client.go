@@ -70,7 +70,7 @@ func (c *Client) Init() error {
 
 func (c *Client) Close() {
 	if c.ws != nil {
-		c.ws.Exit()
+		_ = c.ws.Close()
 		close(c.exit)
 	}
 }

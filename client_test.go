@@ -33,14 +33,14 @@ func TestClient_scanBlock(t *testing.T) {
 		panic(err)
 	}
 	for i := height; i < 10000000000000; i++ {
-		extrinsics, err := client.Block(height)
+		extrinsics, err := client.Block(i)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("len: %v \n", len(extrinsics))
-		for _, item := range extrinsics {
-			fmt.Println(item)
-		}
+		fmt.Printf("len: %v %v  \n", i, len(extrinsics))
+		//for _, item := range extrinsics {
+		//	fmt.Println(item)
+		//}
 	}
 
 }

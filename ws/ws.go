@@ -14,14 +14,14 @@ import (
 type Ws struct {
 	endpoint    string
 	conn        *websocket.Conn
-	readFn      func([]byte) error
+	reConnectFn func() error
 	option      *WsOption
 	lock        sync.Mutex
 	isReConning bool
 	writeMsg    chan []byte
 	readMsg     chan []byte
 	exitSign    chan string
-	heartTime   int64
+	heartTime   time.Duration
 }
 
 func NewWs(endpoint string) (*Ws, error) {
@@ -30,15 +30,14 @@ func NewWs(endpoint string) (*Ws, error) {
 		return nil, err
 	}
 	ws := &Ws{
-		conn:     conn,
-		endpoint: endpoint,
-
+		conn:        conn,
+		endpoint:    endpoint,
 		writeMsg:    make(chan []byte, 1000),
 		readMsg:     make(chan []byte, 1000),
 		exitSign:    make(chan string, 1),
 		isReConning: false,
 		option:      DefaultOption(),
-		heartTime:   60,
+		heartTime:   60 * time.Second,
 	}
 	return ws, nil
 }
@@ -67,24 +66,19 @@ func (ws *Ws) ReadMessage() chan []byte {
 	return ws.readMsg
 }
 
-func (ws *Ws) Exit() {
+func (ws *Ws) Close() error {
 	close(ws.exitSign)
-}
-
-func (ws *Ws) closeConn() {
 	err := ws.conn.Close()
 	if err != nil {
-		//log.Printf("ws conn error: %v", err)
+		return err
 	}
+	return nil
+
 }
 
 func (ws *Ws) write() {
-	defer func() {
-		//log.Printf("close websocket conn")
-		ws.closeConn()
-	}()
 
-	ticker := time.NewTicker(time.Duration(ws.heartTime) * time.Second)
+	ticker := time.NewTicker(ws.heartTime)
 	defer ticker.Stop()
 
 	for {
@@ -93,7 +87,7 @@ func (ws *Ws) write() {
 			if ok {
 				err := ws.conn.WriteMessage(websocket.TextMessage, msg)
 				if err != nil {
-					//log.Printf("write message error: %v \n", err)
+
 				}
 			}
 
@@ -102,18 +96,14 @@ func (ws *Ws) write() {
 			if err != nil {
 				reErr := ws.ReConnect()
 				if reErr != nil {
-					//log.Printf("ws re connect error: %v", reErr)
 				}
-				//log.Printf("write ping message error: %v", err)
 			}
-			//log.Printf("websocket ping message")
+
 		case <-ws.exitSign:
 			err := ws.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				//log.Printf("ws exit  write close message error: %v", err)
-			}
-			//log.Printf("rev ws write exit sign")
 
+			}
 			return
 		}
 	}
@@ -122,25 +112,21 @@ func (ws *Ws) write() {
 func (ws *Ws) read() {
 
 	for {
-
 		mType, message, err := ws.conn.ReadMessage()
 		if err != nil {
-			time.Sleep(time.Duration(ws.heartTime) * time.Second)
-			//log.Printf("ws read message error: %v", err)
+
 		}
 		switch mType {
 		case websocket.TextMessage:
 			ws.readMsg <- message
 		case websocket.PongMessage:
-			//log.Printf("websocket rec pong message")
+
 		case websocket.CloseMessage:
-			//log.Printf("websocket close message")
-			ws.Exit()
+			ws.Close()
 			return
 		}
 		select {
 		case <-ws.exitSign:
-			//log.Printf("rev ws read exit sign")
 			return
 		default:
 
@@ -152,6 +138,10 @@ func (ws *Ws) read() {
 
 func (ws *Ws) IsReConning() bool {
 	return ws.isReConning
+}
+
+func (ws *Ws) SetReConnFn(fn func() error) {
+	ws.reConnectFn = fn
 }
 
 func (ws *Ws) ReConnect() error {
@@ -173,6 +163,9 @@ func (ws *Ws) ReConnect() error {
 		return fmt.Errorf("new conn error: %v", err)
 	}
 	ws.conn = conn
+	if ws.reConnectFn != nil {
+		_ = ws.reConnectFn()
+	}
 	return nil
 
 }

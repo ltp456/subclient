@@ -65,6 +65,6 @@ pub extern "C" fn signed_extrinsic(hash: *const libc::c_char, seed: *const libc:
 
 
 #[no_mangle]
-pub unsafe extern "C" fn free(value: *mut libc::c_char) {
+pub unsafe extern "C" fn free_res(value: *mut libc::c_char) {
     CString::from_raw(value);
 }
