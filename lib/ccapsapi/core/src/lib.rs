@@ -10,6 +10,16 @@ mod hash_cache;
 mod subxt_metadata;
 
 
+pub fn metadata(data: &str) -> Result<Metadata> {
+    let metadata_data = hex::decode(data)?;
+    let mut bytes: Bytes = Bytes(metadata_data);
+    let meta: RuntimeMetadataPrefixed = Decode::decode(&mut &bytes[..])?;
+    let metadata: Metadata = meta.try_into()?;
+    Ok(metadata)
+}
+
+
+
 pub fn dynamic_decode_storage(pallet_name: &str, storage_entry: &str, raw: &str, data: &str) -> Result<String> {
     let metadata_data = hex::decode(data)?;
     let mut bytes: Bytes = Bytes(metadata_data);
