@@ -28,16 +28,16 @@ func init() {
 }
 
 func TestClient_scanBlock(t *testing.T) {
-	height, err := client.GetFinalHeight()
-	if err != nil {
-		panic(err)
-	}
-	for i := height; i < 10000000000000; i++ {
-		extrinsics, err := client.Block(i)
+	//height, err := client.GetFinalHeight()
+	//if err != nil {
+	//	panic(err)
+	//}
+	for i := 13463045; i < 10000000000000; i++ {
+		extrinsics, err := client.Block(uint64(i))
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("len: %v %v  \n", i, len(extrinsics))
+		fmt.Printf("len: %v %v %v  \n", extrinsics[0].Hash, i, len(extrinsics))
 		//for _, item := range extrinsics {
 		//	fmt.Println(item)
 		//}

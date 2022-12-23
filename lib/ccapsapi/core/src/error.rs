@@ -15,7 +15,7 @@ pub use crate::metadata::{
     InvalidMetadataError,
     MetadataError,
 };
-pub use jsonrpsee::core::error::Error as RequestError;
+
 pub use scale_value::scale::{
     DecodeError,
     EncodeError,
@@ -34,9 +34,6 @@ pub enum Error {
     /// Codec error.
     #[error("Scale codec error: {0}")]
     Codec(#[from] codec::Error),
-    /// Rpc error.
-    #[error("Rpc error: {0}")]
-    Rpc(#[from] RequestError),
     /// Serde serialization error
     #[error("Serde json error: {0}")]
     Serialization(#[from] serde_json::error::Error),

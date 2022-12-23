@@ -3,4 +3,5 @@ members = [
     "api",
     "ext",
     "core",
+    "scale"
 ]
