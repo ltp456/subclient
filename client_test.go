@@ -11,15 +11,20 @@ import (
 
 var client *Client
 var err error
-var networkId = []byte{0}
 
 //var wsEndpoint = "ws://127.0.0.1:9944"
 //var httpEndpoint = "http://127.0.0.1:9933"
+var networkId = []byte{0}
 var wsEndpoint = "wss://rpc.polkadot.io"
 var httpEndpoint = "wss://rpc.polkadot.io"
 
 func init() {
-	option := types.NewClientOption(wsEndpoint, httpEndpoint, networkId)
+	option := types.ClientOption{
+		HttpEndpoint: httpEndpoint,
+		WsEndpoint:   wsEndpoint,
+		NetworkId:    networkId,
+		WsSwitch:     true,
+	}
 	client, err = NewClient(option)
 	if err != nil {
 		panic(err)

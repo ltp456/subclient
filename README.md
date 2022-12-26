@@ -1,4 +1,4 @@
-## Docker环境编译安装
+## Docker Centos7 编译
 
     docker pull centos:centos7
 
@@ -19,50 +19,45 @@
     sh build.sh
 
     // 将so文件拷贝到当前的目录，并配置当前的环境变量 
-    export LD_LIBRARY_PATH=/opt/chainmanagersv2/polkadex
+    export LD_LIBRARY_PATH=/opt/subclient
 
-    wget https://studygolang.com/dl/go1.16.9.linux-amd64.tar.gz
+    wget https://studygolang.com/dl/golang/go1.18.9.linux-amd64.tar.gz
 
-    tar -C /usr/local -xzf go1.16.9.linux-amd64.tar.gz
+    tar -C /usr/local -xzf go1.18.9.linux-amd64.tar.gz
+
+    vim /etc/environment
 
     export PATH=$PATH:/usr/local/go/bin
+    export GOPATH=/opt/go
+
+    source /etc/environment
 
     go build
 
+## Example
 
-tips
-    
-    编译需要较大的内存，在docker环境有可能编译不通过，在测试服务器centos7上可以编译通过
+    var networkId = []byte{0}
+    var wsEndpoint = "wss://rpc.polkadot.io"
+    var httpEndpoint = "wss://rpc.polkadot.io"
 
-    https://github.com/paritytech/substrate/issues/10857
+    option := types.ClientOption{
+            HttpEndpoint: httpEndpoint,
+            WsEndpoint:   wsEndpoint,
+            NetworkId:    networkId,
+            WsSwitch:     true,
+        }
+    client, err := NewClient(option)
+    if err != nil {
+            panic(err)
+    }
 
-rust版本
+    head, err := client.chainGetHead()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(head)
 
-    rustc 1.60.0-nightly (09cb29c64 2022-02-15)
-
-
-
-
-
-
-## SubstClient
-
-    HTTP Endpoint: http://localhost:9933/
-    Websocket Endpoint: ws://localhost:9944/
-
-
-## Todo
-* 关注metaData数据？
-* 稳定性？
-* 其它功能用go重写？
-
-
-## refer
-* https://docs.substrate.io/v3/runtime/custom-rpcs/
-* https://github.com/itering/scale.go
-* https://docs.substrate.io/v3/integration/client-libraries/
-
-
+        
 
 
    

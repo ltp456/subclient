@@ -53,6 +53,7 @@ type ClientOption struct {
 	HttpEndpoint string
 	WsEndpoint   string
 	NetworkId    []byte
+	WsSwitch     bool
 }
 
 func NewClientOption(wsUrl, httpUrl string, networkId []byte) ClientOption {

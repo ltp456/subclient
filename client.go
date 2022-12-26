@@ -37,7 +37,7 @@ func NewClient(option types.ClientOption) (*Client, error) {
 		networkId:    option.NetworkId,
 		imp:          http.DefaultClient,
 		debug:        false,
-		wsSwitch:     true,
+		wsSwitch:     option.WsSwitch,
 		timeout:      60 * time.Second,
 		exit:         make(chan string, 1),
 	}
