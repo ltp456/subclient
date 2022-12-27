@@ -1,6 +1,7 @@
 package subclient
 
 import (
+	"encoding/binary"
 	"fmt"
 	"github.com/ChainSafe/gossamer/lib/crypto/sr25519"
 	"subclient/types"
@@ -29,7 +30,12 @@ func TestPublicKeyToAddress(t *testing.T) {
 }
 
 func TestAddrToPublic(t *testing.T) {
-	public, err := AddrToPublic("15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5", []byte{0})
+	//[160 200 26 192 153 155 152 189 138 174 246 230 87 106 59 191 71 227 63 0 99 55 250 87 16 55 183 183 168 168 2 4]
+	//14dp76EwTctDZmX8bgJV3jC6KsnCCpjwzvjMpm4tc2AkJN2L  0
+	//efSnQr1KK8udzkovesB8TbRJo4QMXiyLbWEdiVzJH1RTXRZgE 1110
+	networkId := make([]byte, 2)
+	binary.LittleEndian.PutUint16(networkId, 1110)
+	public, err := AddrToPublic("efSnQr1KK8udzkovesB8TbRJo4QMXiyLbWEdiVzJH1RTXRZgE", networkId)
 	if err != nil {
 		panic(err)
 	}

@@ -50,11 +50,10 @@ func NewB2128ConcatValue(value interface{}) Option {
 }
 
 type ClientOption struct {
-	HttpEndpoint   string
-	WsEndpoint     string
-	NetworkIdBytes []byte
-	NetworkId      int
-	WsSwitch       bool
+	HttpEndpoint string
+	WsEndpoint   string
+	NetworkId    int
+	WsSwitch     bool
 }
 
 type FFIStatus struct {
