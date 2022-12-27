@@ -1,3 +1,31 @@
+## Example
+
+    var networkId = 0
+    var wsEndpoint = "wss://rpc.polkadot.io"
+    var httpEndpoint = "wss://rpc.polkadot.io"
+
+
+	option := types.ClientOption{
+		HttpEndpoint: httpEndpoint,
+		WsEndpoint:   wsEndpoint,
+		NetworkId:    networkId,
+		WsSwitch:     true,
+	}
+	client, err = NewClient(option)
+	if err != nil {
+		panic(err)
+	}
+
+    head, err := client.chainGetHead()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(head)
+
+
+
+
+
 ## Docker Centos7 编译
 
     docker pull centos:centos7
@@ -33,32 +61,3 @@
     source /etc/environment
 
     go build
-
-## Example
-
-    var networkId = []byte{0}
-    var wsEndpoint = "wss://rpc.polkadot.io"
-    var httpEndpoint = "wss://rpc.polkadot.io"
-
-    option := types.ClientOption{
-            HttpEndpoint: httpEndpoint,
-            WsEndpoint:   wsEndpoint,
-            NetworkId:    networkId,
-            WsSwitch:     true,
-        }
-    client, err := NewClient(option)
-    if err != nil {
-            panic(err)
-    }
-
-    head, err := client.chainGetHead()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(head)
-
-        
-
-
-   
-
