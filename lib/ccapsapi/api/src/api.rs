@@ -18,7 +18,7 @@ pub fn inner_dynamic_decode_storage(pallet_name: *const libc::c_char, storage_en
 }
 
 
-pub fn inner_signed_extrinsic(hash: *const libc::c_char, seed: *const libc::c_char, to: *const libc::c_char, amount: *const libc::c_char, nonce: *const libc::c_char, spec_version: *const libc::c_char, transaction_version: *const libc::c_char) -> Result<String> {
+pub fn inner_signed_extrinsic(hash: *const libc::c_char, seed: *const libc::c_char, to: *const libc::c_char, amount: *const libc::c_char, nonce: *const libc::c_char, spec_version: *const libc::c_char, transaction_version: *const libc::c_char,network_id: *const libc::c_char) -> Result<String> {
     let r_hash = get_value(hash)?;
     let r_seed = get_value(seed)?;
     let r_to = get_value(to)?;
@@ -26,7 +26,8 @@ pub fn inner_signed_extrinsic(hash: *const libc::c_char, seed: *const libc::c_ch
     let r_nonce = get_value(nonce)?;
     let r_spec_version = get_value(spec_version)?;
     let r_transaction_version = get_value(transaction_version)?;
-    ext::signed_extrinsic(r_hash, r_seed, r_to, r_amount, r_nonce, r_spec_version, r_transaction_version, NET_WORK_ID)
+    let r_network_id = get_value(network_id)?;
+    ext::signed_extrinsic(r_hash, r_seed, r_to, r_amount, r_nonce, r_spec_version, r_transaction_version, r_network_id)
 }
 
 

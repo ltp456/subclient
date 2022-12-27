@@ -14,16 +14,18 @@ var err error
 
 //var wsEndpoint = "ws://127.0.0.1:9944"
 //var httpEndpoint = "http://127.0.0.1:9933"
-var networkId = []byte{0}
+var networkIdBytes = []byte{0}
+var networkId = 0
 var wsEndpoint = "wss://rpc.polkadot.io"
 var httpEndpoint = "wss://rpc.polkadot.io"
 
 func init() {
 	option := types.ClientOption{
-		HttpEndpoint: httpEndpoint,
-		WsEndpoint:   wsEndpoint,
-		NetworkId:    networkId,
-		WsSwitch:     true,
+		HttpEndpoint:   httpEndpoint,
+		WsEndpoint:     wsEndpoint,
+		NetworkIdBytes: networkIdBytes,
+		NetworkId:      networkId,
+		WsSwitch:       true,
 	}
 	client, err = NewClient(option)
 	if err != nil {
@@ -125,7 +127,7 @@ func TestClient_Staking(t *testing.T) {
 		fmt.Println("eraStakersClipped: ", erasStakersClipped)
 
 		for _, ind := range erasStakersClipped.Others {
-			address, err := ind.Address(networkId)
+			address, err := ind.Address(networkIdBytes)
 			if err != nil {
 				panic(err)
 			}
@@ -137,7 +139,7 @@ func TestClient_Staking(t *testing.T) {
 			panic(err)
 		}
 		fmt.Println("ledger: ", ledger)
-		address, err := ledger.Address(networkId)
+		address, err := ledger.Address(networkIdBytes)
 		if err != nil {
 			panic(err)
 		}

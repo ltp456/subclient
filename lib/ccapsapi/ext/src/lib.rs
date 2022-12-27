@@ -40,18 +40,16 @@ impl Default for CallExt {
 }
 
 
-
-
 // todo
 
 pub fn decode_extrinsic(raw: String) -> Result<String> {
     let mut call_ext = CallExt::default();
     let mut vec = Vec::from_hex(raw)?;
-    let ext = UncheckedExtrinsicV4::<([u8;2],), SignedExtra>::decode(&mut vec.as_slice());
+    let ext = UncheckedExtrinsicV4::<([u8; 2], ), SignedExtra>::decode(&mut vec.as_slice());
     //let ext = UncheckedExtrinsicV4::decode(&mut vec.as_slice());
     match ext {
         Ok(e) => {
-            let (call_index, ..): ([u8; 2],) = e.function;
+            let (call_index, ..): ([u8; 2], ) = e.function;
             call_ext.pallet_index = call_index[0] as i16;
             call_ext.call_index = call_index[1] as i16
         }
@@ -62,11 +60,13 @@ pub fn decode_extrinsic(raw: String) -> Result<String> {
 }
 
 
-pub fn signed_extrinsic(hash: String, seed: String, to: String, amount: String, nonce: String, spec_version: String, transaction_version: String, network_id: u16) -> Result<String> {
+pub fn signed_extrinsic(hash: String, seed: String, to: String, amount: String, nonce: String, spec_version: String, transaction_version: String, network_id: String) -> Result<String> {
     // println!("{:?},{:?},{:?},{:?},{:?},{:?},{:?},{:?}",hash,seed,to,amount,nonce,spec_version,transaction_version,network_id);
 
+    let new_network_id = network_id.parse::<u16>().map_err(|e| anyhow!("parse network id error {:?}",e))?;
+
     let pair = sr25519::Pair::from_string(seed.as_str(), None).map_err(|e| anyhow!("gen pair error {:?}",e))?;
-    sp_core::crypto::set_default_ss58_version(Ss58AddressFormat::custom(network_id));
+    sp_core::crypto::set_default_ss58_version(Ss58AddressFormat::custom(new_network_id));
     let to_addr = AccountId::from_str(to.as_str()).map_err(|e| anyhow!("gen to addr error {:?}",e))?;
     let address = GenericAddress::Id(to_addr);
 

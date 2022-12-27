@@ -24,7 +24,7 @@ func (c *Client) ffiPalletInfo(palletName, callName, metadata string) (string, e
 	return output, nil
 }
 
-func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVersion, transactionVersion string) (string, error) {
+func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVersion, transactionVersion, networkId string) (string, error) {
 	cHash := C.CString(hash)
 	cSeed := C.CString(seed)
 	cAddress := C.CString(address)
@@ -32,6 +32,7 @@ func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVers
 	cNonce := C.CString(nonce)
 	cSpecVersion := C.CString(specVersion)
 	cTransactionVersion := C.CString(transactionVersion)
+	cNetworkId := C.CString(networkId)
 	defer C.free(unsafe.Pointer(cHash))
 	defer C.free(unsafe.Pointer(cSeed))
 	defer C.free(unsafe.Pointer(cAddress))
@@ -39,7 +40,8 @@ func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVers
 	defer C.free(unsafe.Pointer(cNonce))
 	defer C.free(unsafe.Pointer(cSpecVersion))
 	defer C.free(unsafe.Pointer(cTransactionVersion))
-	o := C.signed_extrinsic(cHash, cSeed, cAddress, cAmount, cNonce, cSpecVersion, cTransactionVersion)
+	defer C.free(unsafe.Pointer(cNetworkId))
+	o := C.signed_extrinsic(cHash, cSeed, cAddress, cAmount, cNonce, cSpecVersion, cTransactionVersion, cNetworkId)
 	output := C.GoString(o)
 	err := c.free(o)
 	if err != nil {

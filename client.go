@@ -18,29 +18,31 @@ import (
 )
 
 type Client struct {
-	wsEndpoint   string
-	httpEndpoint string
-	imp          *http.Client
-	ws           *wsclient.Ws
-	networkId    []byte
-	genesisHash  string
-	debug        bool
-	wsSwitch     bool
-	timeout      time.Duration
-	exit         chan string
-	cache        *Cache
+	wsEndpoint     string
+	httpEndpoint   string
+	imp            *http.Client
+	ws             *wsclient.Ws
+	networkIdBytes []byte
+	networkId      int
+	genesisHash    string
+	debug          bool
+	wsSwitch       bool
+	timeout        time.Duration
+	exit           chan string
+	cache          *Cache
 }
 
 func NewClient(option types.ClientOption) (*Client, error) {
 	client := Client{
-		wsEndpoint:   option.WsEndpoint,
-		httpEndpoint: option.HttpEndpoint,
-		networkId:    option.NetworkId,
-		imp:          http.DefaultClient,
-		debug:        false,
-		wsSwitch:     option.WsSwitch,
-		timeout:      60 * time.Second,
-		exit:         make(chan string, 1),
+		wsEndpoint:     option.WsEndpoint,
+		httpEndpoint:   option.HttpEndpoint,
+		networkIdBytes: option.NetworkIdBytes,
+		networkId:      option.NetworkId,
+		imp:            http.DefaultClient,
+		debug:          false,
+		wsSwitch:       option.WsSwitch,
+		timeout:        60 * time.Second,
+		exit:           make(chan string, 1),
 		cache: &Cache{
 			cache:     make(map[int64]chan []byte),
 			startTime: time.Now(),
@@ -212,7 +214,7 @@ func (c *Client) SignedExtrinsic(seed, address, amount, nonce string) (string, e
 		return "", err
 	}
 	output, err := c.ffiSignedExtrinsic(c.genesisHash, seed, address, amount, nonce,
-		fmt.Sprintf("%v", runtimeVersion.SpecVersion), fmt.Sprintf("%v", runtimeVersion.TransactionVersion))
+		fmt.Sprintf("%v", runtimeVersion.SpecVersion), fmt.Sprintf("%v", runtimeVersion.TransactionVersion), fmt.Sprintf("%v", c.networkId))
 	if err != nil {
 		return "", err
 	}
@@ -330,7 +332,7 @@ func (c *Client) ParseExtrinsic(height uint64, extrinsics []string, events []typ
 			return nil, err
 		}
 		for index, event := range filterEvents {
-			extrinsic, err := event.Parse(c.networkId)
+			extrinsic, err := event.Parse(c.networkIdBytes)
 			if err != nil {
 				continue
 			}
@@ -477,7 +479,7 @@ func (c *Client) GetStorageInfo(palletName types.ModuleName, storageEntry types.
 		}
 		blockHash = finalHeadHash
 	}
-	storageKey, err := NewStorageKey(palletName, storageEntry, c.networkId, opts...)
+	storageKey, err := NewStorageKey(palletName, storageEntry, c.networkIdBytes, opts...)
 	if err != nil {
 		return err
 	}
@@ -514,7 +516,7 @@ func (c *Client) GetStorageInfoWithMetadata(palletName types.ModuleName, storage
 		}
 		blockHash = finalHeadHash
 	}
-	storageKey, err := NewStorageKey(palletName, storageEntry, c.networkId, opts...)
+	storageKey, err := NewStorageKey(palletName, storageEntry, c.networkIdBytes, opts...)
 	if err != nil {
 		return err
 	}
