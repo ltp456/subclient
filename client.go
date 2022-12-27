@@ -645,6 +645,9 @@ func (c *Client) post(param types.Params, value interface{}) (err error) {
 	if c.debug {
 		fmt.Println("response: ", string(data))
 	}
+	if param.ID != commonResp.ID {
+		return fmt.Errorf("%v id mot match  req: %v   resp: %v ", param.Method, param.ID, commonResp.ID)
+	}
 
 	err = json.Unmarshal(data, commonResp)
 	if err != nil {
