@@ -68,7 +68,7 @@ func (c *Client) Init() error {
 		go ws.Run()
 		go c.wsResp()
 		c.ws = ws
-		return nil
+
 	}
 	genesisHash, err := c.GetGenesisHash()
 	if err != nil {
