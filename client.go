@@ -28,6 +28,7 @@ type Client struct {
 	wsSwitch     bool
 	timeout      time.Duration
 	exit         chan string
+	cache        *Cache
 }
 
 func NewClient(option types.ClientOption) (*Client, error) {
@@ -40,6 +41,10 @@ func NewClient(option types.ClientOption) (*Client, error) {
 		wsSwitch:     option.WsSwitch,
 		timeout:      60 * time.Second,
 		exit:         make(chan string, 1),
+		cache: &Cache{
+			cache:     make(map[int64]chan []byte),
+			startTime: time.Now(),
+		},
 	}
 	err := client.Init()
 	if err != nil {
@@ -693,24 +698,18 @@ func (c *Client) get(path string, value interface{}) (err error) {
 
 // --------------------------------
 //todo memory  待测试
-//var cache sync.Map
-
-var cache Cache = Cache{
-	cache:     make(map[int64]chan []byte),
-	startTime: time.Now(),
-}
 
 func (c *Client) wsReq(param types.Params, value interface{}) error {
 	// todo reset memory
-	if cache.CanClear() {
-		if cache.Len() > 0 {
+	if c.cache.CanClear() {
+		if c.cache.Len() > 0 {
 			time.Sleep(c.timeout)
 		}
-		cache.ReSet()
+		c.cache.ReSet()
 	}
 	id := param.GetId()
 	sigChain := make(chan []byte, 1)
-	cache.Store(id, sigChain)
+	c.cache.Store(id, sigChain)
 	if c.debug {
 		fmt.Printf("ws req: %v %v \n", id, param.String())
 	}
@@ -722,13 +721,13 @@ func (c *Client) wsReq(param types.Params, value interface{}) error {
 	defer cancelFunc()
 	select {
 	case <-ctx.Done():
-		if _, ok := cache.Load(id); ok {
-			cache.Delete(id)
+		if _, ok := c.cache.Load(id); ok {
+			c.cache.Delete(id)
 		}
 		return fmt.Errorf("timeout error")
 	case msg := <-sigChain:
-		if _, ok := cache.Load(id); ok {
-			cache.Delete(id)
+		if _, ok := c.cache.Load(id); ok {
+			c.cache.Delete(id)
 		}
 		commonResp := &types.CommonResp{}
 		err := json.Unmarshal(msg, commonResp)
@@ -760,7 +759,7 @@ func (c *Client) wsResp() {
 				fmt.Printf("ws recv: %v %v \n", commonResp.ID, string(data))
 			}
 			key := commonResp.ID
-			if value, ok := cache.Load(key); ok {
+			if value, ok := c.cache.Load(key); ok {
 				value <- data
 			}
 		case <-c.exit:
