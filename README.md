@@ -29,7 +29,7 @@ subclient is a JSON RPC client of the substrate, it can scan blocks, transfer tr
 
 
 
-## Docker Centos7 编译
+## Docker Centos7 
 
     docker pull centos:centos7
 

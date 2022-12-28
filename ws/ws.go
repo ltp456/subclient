@@ -166,6 +166,7 @@ func (ws *Ws) ReConnect() error {
 	if ws.reConnectFn != nil {
 		_ = ws.reConnectFn()
 	}
+	ws.isReConning = false
 	return nil
 
 }
