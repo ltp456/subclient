@@ -42,7 +42,7 @@ func NewClient(option types.ClientOption) (*Client, error) {
 		networkIdBytes: networkIdBytes,
 		networkId:      option.NetworkId,
 		imp:            http.DefaultClient,
-		debug:          false,
+		debug:          option.Debug,
 		wsSwitch:       option.WsSwitch,
 		timeout:        60 * time.Second,
 		exit:           make(chan string, 1),
@@ -663,13 +663,12 @@ func (c *Client) post(param types.Params, value interface{}) (err error) {
 	if c.debug {
 		fmt.Println("response: ", string(data))
 	}
-	if param.ID != commonResp.ID {
-		return fmt.Errorf("%v id mot match  req: %v   resp: %v ", param.Method, param.ID, commonResp.ID)
-	}
-
 	err = json.Unmarshal(data, commonResp)
 	if err != nil {
 		return err
+	}
+	if param.ID != commonResp.ID {
+		return fmt.Errorf("%v id mot match  req: %v   resp: %v ", param.Method, param.ID, commonResp.ID)
 	}
 	if commonResp.Error != nil {
 		return fmt.Errorf("jsonrpc err %v %v", commonResp.Error.Message, commonResp.Error.Data)

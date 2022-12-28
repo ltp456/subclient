@@ -54,6 +54,7 @@ type ClientOption struct {
 	WsEndpoint   string
 	NetworkId    int
 	WsSwitch     bool
+	Debug        bool
 }
 
 type FFIStatus struct {

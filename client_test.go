@@ -17,7 +17,7 @@ var err error
 
 var networkId = 0
 var wsEndpoint = "wss://rpc.polkadot.io"
-var httpEndpoint = "wss://rpc.polkadot.io"
+var httpEndpoint = "https://rpc.polkadot.io"
 
 func init() {
 	option := types.ClientOption{
@@ -25,6 +25,7 @@ func init() {
 		WsEndpoint:   wsEndpoint,
 		NetworkId:    networkId,
 		WsSwitch:     true,
+		Debug:        false,
 	}
 	client, err = NewClient(option)
 	if err != nil {
@@ -34,18 +35,18 @@ func init() {
 }
 
 func TestClient_scanBlock(t *testing.T) {
-	//height, err := client.GetFinalHeight()
-	//if err != nil {
-	//	panic(err)
-	//}
-	for i := 13463845; i < 10000000000000; i++ {
+	height, err := client.GetFinalHeight()
+	if err != nil {
+		panic(err)
+	}
+	for i := height; i < 10000000000000; i++ {
 		extrinsics, err := client.Block(uint64(i))
 		if err != nil {
 			panic(err)
 		}
 		fmt.Printf("len: %v %v %v  \n", extrinsics[0].Hash, i, len(extrinsics))
 		for _, item := range extrinsics {
-			if item.Module == types.Balances {
+			if item.Module == types.Balances && item.Event == types.Transfer {
 				fmt.Printf("%v \n", item)
 			}
 		}
