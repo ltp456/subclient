@@ -1,8 +1,12 @@
+
+## Subclient
+subclient is a JSON RPC client of the substrate, it can scan blocks, transfer transactions and so on
+
 ## Example
 
     var networkId = 0
     var wsEndpoint = "wss://rpc.polkadot.io"
-    var httpEndpoint = "wss://rpc.polkadot.io"
+    var httpEndpoint = "https://rpc.polkadot.io"
 
 
 	option := types.ClientOption{
@@ -10,19 +14,18 @@
 		WsEndpoint:   wsEndpoint,
 		NetworkId:    networkId,
 		WsSwitch:     true,
+		Debug:        false,
 	}
 	client, err = NewClient(option)
 	if err != nil {
 		panic(err)
 	}
 
-    head, err := client.chainGetHead()
+    head, err := client.GetFinalHeight()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(head)
-
-
 
 
 
