@@ -60,7 +60,7 @@ pub fn decode_extrinsic(raw: String) -> Result<String> {
 }
 
 
-pub fn signed_extrinsic(hash: String, seed: String, to: String, amount: String, nonce: String, spec_version: String, transaction_version: String, network_id: String) -> Result<String> {
+pub fn signed_extrinsic(hash: String, seed: String, to: String, amount: String, nonce: String, spec_version: String, transaction_version: String, network_id: String, module_index: String, call_index: String) -> Result<String> {
     // println!("{:?},{:?},{:?},{:?},{:?},{:?},{:?},{:?}",hash,seed,to,amount,nonce,spec_version,transaction_version,network_id);
 
     let new_network_id = network_id.parse::<u16>().map_err(|e| anyhow!("parse network id error {:?}",e))?;
@@ -75,8 +75,10 @@ pub fn signed_extrinsic(hash: String, seed: String, to: String, amount: String, 
 
     let genesis_hash = sp_core::H256::from_str(hash.as_str()).map_err(|e| anyhow!("parse hash error {:?}",e))?;
 
-    let module_index = 4 as u8;
-    let call_index = 0 as u8;
+    let module_index = module_index.parse::<u8>().map_err(|e| anyhow!("parse module index error: {:?}",e))?;
+
+    let call_index = call_index.parse::<u8>().map_err(|e| anyhow!("parse call index error: {:?}",e))?;
+
     let call = ([module_index, call_index], address, Compact(new_amount));
 
     let new_spec_version = spec_version.parse::<u32>().map_err(|e| anyhow!("parse spec version error: {:?}",e))?;

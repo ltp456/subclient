@@ -216,8 +216,21 @@ func (c *Client) SignedExtrinsic(seed, address, amount, nonce string) (string, e
 	if err != nil {
 		return "", err
 	}
+	specVersion := fmt.Sprintf("%v", runtimeVersion.SpecVersion)
+	transVersion := fmt.Sprintf("%v", runtimeVersion.TransactionVersion)
+	networkId := fmt.Sprintf("%v", c.networkId)
+	metaData, err := c.GetMetaData("")
+	if err != nil {
+		return "", err
+	}
+	palletInfo, err := c.PalletInfo(types.Balances, types.CallTransfer, metaData)
+	if err != nil {
+		return "", err
+	}
+	moduleIndex := fmt.Sprintf("%v", palletInfo.PalletIndex)
+	callIndex := fmt.Sprintf("%v", palletInfo.CallIndex)
 	output, err := c.ffiSignedExtrinsic(c.genesisHash, seed, address, amount, nonce,
-		fmt.Sprintf("%v", runtimeVersion.SpecVersion), fmt.Sprintf("%v", runtimeVersion.TransactionVersion), fmt.Sprintf("%v", c.networkId))
+		specVersion, transVersion, networkId, moduleIndex, callIndex)
 	if err != nil {
 		return "", err
 	}
@@ -553,16 +566,21 @@ func (c *Client) DynamicDecodeStorage(palletName types.ModuleName, storageEntry 
 
 }
 
-func (c *Client) PalletInfo(palletName types.ModuleName, callName types.CallId, metadata string) (string, error) {
+func (c *Client) PalletInfo(palletName types.ModuleName, callName types.CallId, metadata string) (*types.PalletInfo, error) {
 	data, err := c.ffiPalletInfo(string(palletName), string(callName), metadata)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	res, err := checkFFIStatus(data)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return res, nil
+	palletInfo := &types.PalletInfo{}
+	err = json.Unmarshal([]byte(res), palletInfo)
+	if err != nil {
+		return nil, err
+	}
+	return palletInfo, nil
 
 }
 

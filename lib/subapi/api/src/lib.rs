@@ -51,8 +51,8 @@ pub extern "C" fn pallet_info(data: *const libc::c_char, pallet_name: *const lib
 
 
 #[no_mangle]
-pub extern "C" fn signed_extrinsic(hash: *const libc::c_char, seed: *const libc::c_char, to: *const libc::c_char, amount: *const libc::c_char, nonce: *const libc::c_char, spec_version: *const libc::c_char, transaction_version: *const libc::c_char,network_id: *const libc::c_char) -> *const libc::c_char {
-    let result = api::inner_signed_extrinsic(hash, seed, to, amount, nonce, spec_version, transaction_version,network_id);
+pub extern "C" fn signed_extrinsic(hash: *const libc::c_char, seed: *const libc::c_char, to: *const libc::c_char, amount: *const libc::c_char, nonce: *const libc::c_char, spec_version: *const libc::c_char, transaction_version: *const libc::c_char, network_id: *const libc::c_char, module_index: *const libc::c_char, call_index: *const libc::c_char) -> *const libc::c_char {
+    let result = api::inner_signed_extrinsic(hash, seed, to, amount, nonce, spec_version, transaction_version, network_id, module_index, call_index);
     return match result {
         Ok(res) => {
             utils::success(res)

@@ -1,9 +1,9 @@
 package subclient
 
 /*
-#cgo LDFLAGS: -L./lib -lccapsapi
+#cgo LDFLAGS: -L./lib -lsubapi
 #include <stdlib.h>
-#include "./lib/ccapsapi.h"
+#include "./lib/subapi.h"
 */
 import "C"
 import "unsafe"
@@ -17,14 +17,14 @@ func (c *Client) ffiPalletInfo(palletName, callName, metadata string) (string, e
 	defer C.free(unsafe.Pointer(cMetadata))
 	o := C.pallet_info(cMetadata, cPalletName, cCallName)
 	output := C.GoString(o)
-	err := c.free(o)
+	err := c.freeRes(o)
 	if err != nil {
 		return "", err
 	}
 	return output, nil
 }
 
-func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVersion, transactionVersion, networkId string) (string, error) {
+func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVersion, transactionVersion, networkId, moduleIndex, callIndex string) (string, error) {
 	cHash := C.CString(hash)
 	cSeed := C.CString(seed)
 	cAddress := C.CString(address)
@@ -33,6 +33,8 @@ func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVers
 	cSpecVersion := C.CString(specVersion)
 	cTransactionVersion := C.CString(transactionVersion)
 	cNetworkId := C.CString(networkId)
+	cModuleIndex := C.CString(moduleIndex)
+	cCallIndex := C.CString(callIndex)
 	defer C.free(unsafe.Pointer(cHash))
 	defer C.free(unsafe.Pointer(cSeed))
 	defer C.free(unsafe.Pointer(cAddress))
@@ -41,9 +43,11 @@ func (c *Client) ffiSignedExtrinsic(hash, seed, address, amount, nonce, specVers
 	defer C.free(unsafe.Pointer(cSpecVersion))
 	defer C.free(unsafe.Pointer(cTransactionVersion))
 	defer C.free(unsafe.Pointer(cNetworkId))
-	o := C.signed_extrinsic(cHash, cSeed, cAddress, cAmount, cNonce, cSpecVersion, cTransactionVersion, cNetworkId)
+	defer C.free(unsafe.Pointer(cModuleIndex))
+	defer C.free(unsafe.Pointer(cCallIndex))
+	o := C.signed_extrinsic(cHash, cSeed, cAddress, cAmount, cNonce, cSpecVersion, cTransactionVersion, cNetworkId, cModuleIndex, cCallIndex)
 	output := C.GoString(o)
-	err := c.free(o)
+	err := c.freeRes(o)
 	if err != nil {
 		return "", err
 	}
@@ -61,7 +65,7 @@ func (c *Client) ffiDynamicDecodeStorage(palletName, storageEntry, raw, metadata
 	defer C.free(unsafe.Pointer(cMetadata))
 	o := C.dynamic_decode_storage(cPalletName, cStorageEntry, cRaw, cMetadata)
 	output := C.GoString(o)
-	err := c.free(o)
+	err := c.freeRes(o)
 	if err != nil {
 		return "", err
 	}
@@ -73,14 +77,14 @@ func (c *Client) ffiDecodeExtrinsic(raw string) (string, error) {
 	defer C.free(unsafe.Pointer(cRaw))
 	o := C.decode_extrinsic(cRaw)
 	output := C.GoString(o)
-	err := c.free(o)
+	err := c.freeRes(o)
 	if err != nil {
 		return "", err
 	}
 	return output, nil
 }
 
-func (c *Client) free(value *C.char) error {
+func (c *Client) freeRes(value *C.char) error {
 	C.free_res(value)
 	return nil
 }
