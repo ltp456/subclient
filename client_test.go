@@ -11,13 +11,13 @@ import (
 
 var client *Client
 var err error
-
-//var wsEndpoint = "ws://127.0.0.1:9944"
-//var httpEndpoint = "http://127.0.0.1:9933"
-
 var networkId = 0
-var wsEndpoint = "wss://rpc.polkadot.io"
-var httpEndpoint = "https://rpc.polkadot.io"
+
+var wsEndpoint = "ws://127.0.0.1:9944"
+var httpEndpoint = "http://127.0.0.1:9933"
+
+//var wsEndpoint = "wss://rpc.polkadot.io"
+//var httpEndpoint = "https://rpc.polkadot.io"
 
 func init() {
 	option := types.ClientOption{
