@@ -53,6 +53,7 @@ type ClientOption struct {
 	HttpEndpoint string
 	WsEndpoint   string
 	NetworkId    int
+	NetworkBytes []byte
 	WsSwitch     bool
 	Debug        bool
 }

@@ -3,7 +3,6 @@ package subclient
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -34,12 +33,10 @@ type Client struct {
 }
 
 func NewClient(option types.ClientOption) (*Client, error) {
-	networkIdBytes := make([]byte, 2)
-	binary.LittleEndian.PutUint16(networkIdBytes, uint16(option.NetworkId))
 	client := Client{
 		wsEndpoint:     option.WsEndpoint,
 		httpEndpoint:   option.HttpEndpoint,
-		networkIdBytes: networkIdBytes,
+		networkIdBytes: option.NetworkBytes,
 		networkId:      option.NetworkId,
 		imp:            http.DefaultClient,
 		debug:          option.Debug,

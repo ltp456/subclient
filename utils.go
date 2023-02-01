@@ -8,6 +8,7 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 	"golang.org/x/crypto/blake2b"
 	"hash"
+	"math/big"
 	"strings"
 	"subclient/types"
 	"subclient/xxhash"
@@ -115,4 +116,111 @@ func HashHex(data string) (string, error) {
 	_, _ = checksum.Write([]byte(data))
 	h := checksum.Sum(nil)
 	return hex.EncodeToString(h), nil
+}
+
+func RatToStr(value *big.Rat, decimal int) string {
+	//todo
+	if decimal == 0 {
+		return value.FloatString(0)
+	}
+	precision := "1" + strings.Repeat("0", decimal)
+	precisionRat, _ := NewRatFromStr(precision)
+	ratDiv := RatDiv(value, precisionRat)
+	return ratDiv.FloatString(decimal)
+
+}
+
+func StrToRat(value string, decimal int) (*big.Rat, bool) {
+	//todo
+	rat, ok := NewRatFromStr(value)
+	if !ok {
+		return nil, false
+	}
+	if decimal == 0 {
+		return rat, true
+	}
+	precision := "1" + strings.Repeat("0", decimal)
+	precisionRat, ok := NewRatFromStr(precision)
+	if !ok {
+		return nil, false
+	}
+	ratMul := RatMul(rat, precisionRat)
+	return ratMul, true
+}
+
+func RatDivDecimal(value *big.Rat, decimal int) *big.Rat {
+	if decimal == 0 {
+		return new(big.Rat).Set(value)
+	}
+	precision := "1" + strings.Repeat("0", int(decimal))
+	precisionRat, _ := NewRatFromStr(precision)
+	ratDiv := RatDiv(value, precisionRat)
+	return ratDiv
+
+}
+
+func NewRateFromBigInt(value *big.Int) *big.Rat {
+	rat := new(big.Rat)
+	newRate := rat.SetInt(value)
+	return newRate
+}
+
+func NewRatFromStr(value string) (*big.Rat, bool) {
+	rat := new(big.Rat)
+	newRat, ok := rat.SetString(value)
+	return newRat, ok
+}
+
+func NewRatFromBigInt(value *big.Int) (*big.Rat, bool) {
+	return NewRatFromStr(value.String())
+}
+
+func NewRatFromFloat(value float64) *big.Rat {
+	rat := new(big.Rat)
+	newRat := rat.SetFloat64(value)
+	return newRat
+}
+
+func NewRatFromInt(value int64) *big.Rat {
+	rat := new(big.Rat)
+	newRat := rat.SetInt64(value)
+	return newRat
+}
+
+func NewRatFromUint(value uint64) *big.Rat {
+	rat := new(big.Rat)
+	newRat := rat.SetUint64(value)
+	return newRat
+}
+
+func RatAdd(a, b *big.Rat) *big.Rat {
+	rat := new(big.Rat)
+	newRat := rat.Add(a, b)
+	return newRat
+}
+
+func RatSub(a, b *big.Rat) *big.Rat {
+	rat := new(big.Rat)
+	newRat := rat.Sub(a, b)
+	return newRat
+}
+
+func RatMul(a, b *big.Rat) *big.Rat {
+	rat := new(big.Rat)
+	newRat := rat.Mul(a, b)
+	return newRat
+}
+
+func NewRat(a *big.Rat) *big.Rat {
+	rat := new(big.Rat)
+	rat.Set(a)
+	return rat
+}
+
+func RatDiv(a, b *big.Rat) *big.Rat {
+	rat := new(big.Rat)
+	invRat := rat.Inv(b)
+	tmpRat := new(big.Rat)
+	result := tmpRat.Mul(a, invRat)
+	return result
 }
