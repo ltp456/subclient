@@ -114,6 +114,29 @@ func TestClient_Staking(t *testing.T) {
 	ownValidators["5FeBC65Gei67Lef3EoBTqfh1LFyZsFxAitRS3BUoyMz8rGeH"] = struct{}{}
 	ownValidators["5GnSnCBzTyoLVSoQP1aXQLEmUBVyZt25z6J3e1MmUGzFyDvJ"] = struct{}{}
 
+	controllerAddr := "5HdKwTY4YGEYSrPn9dt1aLRTqT6eexhBhJbGaxZh1vQqViRX"
+
+	//accountInfo, err := client.SystemAccount(controllerAddr)
+	//if err!=nil{
+	//	panic(err)
+	//}
+
+	ledger, err := client.StakingLedger(controllerAddr)
+	if err != nil {
+		panic(err)
+	}
+	totalBondBig := ledger.Active
+
+	totalUnbondBig := big.NewInt(0)
+	for _, v := range ledger.Unlocking {
+		for _, unLock := range v {
+			unbondingBig := unLock.Value
+			totalUnbondBig = big.NewInt(0).Add(totalUnbondBig, unbondingBig)
+		}
+	}
+
+	fmt.Printf("controller: %v, bond: %v ,unBond: %v \n", controllerAddr, Big2Str(totalBondBig, 18), Big2Str(totalUnbondBig, 18))
+
 	for eraIndex := int64(286); eraIndex < 287; eraIndex++ {
 		currentEraIndex := uint32(eraIndex)
 		eraReward, err := client.ValidatorReward(currentEraIndex)
@@ -175,6 +198,7 @@ func TestClient_Staking(t *testing.T) {
 				rewardRat := RatAdd(ownReward, commissionReward)
 				totalBond = RatAdd(totalBond, ownBondRat)
 				totalReward = RatAdd(totalReward, rewardRat)
+				fmt.Printf("own vaidator: eraIndex: %v, validator: %v ,bond: %v, reward: %v \n", currentEraIndex, validatorAddress, RatToStr(ownBondRat, 18), RatToStr(rewardRat, 18))
 
 			}
 
@@ -201,7 +225,7 @@ func TestClient_Staking(t *testing.T) {
 					rewardRat := RatMul(RatMul(RatSub(NewRatFromInt(1), validatorCommissionRat), validatorEarnRat), bondPercentRat)
 					totalReward = RatAdd(totalReward, rewardRat)
 					totalBond = RatAdd(totalBond, ownBondRat)
-					fmt.Printf("eraIndex: %v, validator: %v,nominator: %v, reward: %v \n", currentEraIndex, validatorAddress, address, RatToStr(rewardRat, 18))
+					fmt.Printf("eraIndex: %v, validator: %v,nominator: %v, reward: %v, validatorBond: %v,ownBond: %v \n", currentEraIndex, validatorAddress, address, RatToStr(rewardRat, 18), RatToStr(validatorTotalBondRat, 18), RatToStr(bondRat, 18))
 				}
 
 			}
@@ -449,11 +473,11 @@ func TestDemo001(t *testing.T) {
 }
 
 func TestClient_AccountInfo(t *testing.T) {
-	accountInfo, err := client.SystemAccount("5GCSraS9frHy8RQRKyMGbxCmRrVphVRFE2iQqDfhCkbd8taN")
+	accountInfo, err := client.SystemAccount("5HdKwTY4YGEYSrPn9dt1aLRTqT6eexhBhJbGaxZh1vQqViRX")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("MiscFrozen: %v, FeeFrozen: %v, Free: %v, Reserved: %v \n", accountInfo.Data.MiscFrozen.String(), accountInfo.Data.FeeFrozen.String(), accountInfo.Data.Free.String(), accountInfo.Data.Reserved.String())
+	fmt.Printf("MiscFrozen: %v, FeeFrozen: %v, Free: %v, Reserved: %v \n", Big2Str(accountInfo.Data.MiscFrozen, 18), Big2Str(accountInfo.Data.FeeFrozen, 18), Big2Str(accountInfo.Data.Free, 18), Big2Str(accountInfo.Data.Reserved, 18))
 }
 
 func TestClient_SystemEvents(t *testing.T) {
