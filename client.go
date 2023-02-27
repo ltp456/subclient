@@ -480,6 +480,15 @@ func (c *Client) StakingLedger(addr string) (*types.StakingLedger, error) {
 	return stakingLedger, nil
 }
 
+func (c *Client) EraTotalStake(eraIndex uint32) (*big.Int, error) {
+	totalStake := big.NewInt(0)
+	err := c.GetStorageInfo(types.Staking, types.ErasTotalStake, "", totalStake, types.NewTwox64ConcatValue(eraIndex))
+	if err != nil {
+		return nil, err
+	}
+	return totalStake, nil
+}
+
 func (c *Client) GetStorageInfo(palletName types.ModuleName, storageEntry types.StorageKey, blockHash string, value interface{}, opts ...types.Option) error {
 	typeOf := reflect.ValueOf(value)
 	if typeOf.Kind() != reflect.Ptr {

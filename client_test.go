@@ -101,6 +101,45 @@ func TestClient_getHead(t *testing.T) {
 	fmt.Println(head)
 }
 
+func TestClient_OnChainApr(t *testing.T) {
+
+	activeEraInfo, err := client.ActiveEraInfo()
+	if err != nil {
+		panic(err)
+	}
+
+	reward, err := client.ValidatorReward(uint32(activeEraInfo.Index - 1))
+	if err != nil {
+		panic(err)
+	}
+
+	eraTotalStake, err := client.EraTotalStake(uint32(activeEraInfo.Index - 1))
+	if err != nil {
+		panic(err)
+	}
+	apr := RatMul(RatDiv(NewRateFromBigInt(reward), NewRateFromBigInt(eraTotalStake)), NewRatFromInt(365))
+
+	fmt.Printf("eraIndex: %v,reward: %v,totalStake: %v, apr: %v \n", activeEraInfo.Index-1, reward.String(), eraTotalStake.String(), apr.FloatString(18))
+
+}
+
+func TestClient_ChainAPY(t *testing.T) {
+	// reward 123,004,589,200,024,601,923,222
+	// total:316,727,875,901,025,829,290,136,572
+	//rewardRat, ok := NewRatFromStr("123004589200024601923222")
+	//if !ok {
+	//	panic("")
+	//}
+	//toalRat, ok := NewRatFromStr("316727875901025829290136572")
+	//if !ok {
+	//	panic("")
+	//}
+	//apr := RatMul(RatDiv(rewardRat, toalRat), NewRatFromInt(365))
+	//
+	//fmt.Println(apr.FloatString(18))
+
+}
+
 func TestClient_Staking(t *testing.T) {
 
 	//activeEra, err := client.ActiveEraInfo()

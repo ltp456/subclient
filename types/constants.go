@@ -35,6 +35,7 @@ const (
 	ErasValidatorPrefs      StorageKey = "ErasValidatorPrefs"
 	ErasStakersClipped      StorageKey = "ErasStakersClipped"
 	Ledger                  StorageKey = "Ledger"
+	ErasTotalStake          StorageKey = "ErasTotalStake"
 )
 
 type EventID string
