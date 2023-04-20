@@ -11,19 +11,20 @@ type Extrinsic struct {
 	To     string   `json:"to"`
 	Amount *big.Int `json:"amount"`
 
-	Hash  string `json:"hash"`
-	Nonce uint64 `json:"nonce"`
-	Tip   string `json:"tip"`
-	Era   string `json:"era"`
+	Hash    string     `json:"hash"`
+	Index   int        `json:"index"`
+	Height  uint64     `json:"height"`
+	Module  ModuleName `json:"module"`
+	Call    CallId     `json:"call"`
+	Event   EventID    `json:"event"`
+	GasFee  *big.Int
+	FeeAddr string
 
-	Index  int        `json:"index"`
-	Height uint64     `json:"height"`
-	Module ModuleName `json:"module"`
-	Call   CallId     `json:"call"`
-	Event  EventID    `json:"event"`
+	FeeInfo TransactionFeeParam `json:"fee"`
 
 	Value *big.Int `json:"value"`
 	Addr  string   `json:"addr"` // other operation
+
 }
 
 func DefaultExtrinsic() *Extrinsic {
@@ -61,29 +62,40 @@ func (se SystemEvent) Parse(networkId []byte) (*Extrinsic, error) {
 	}
 	// todo
 	// 目前我们只需要处理这几个模块
-	if !(moduleName == System || moduleName == Staking || moduleName == Balances) {
+	if !(moduleName == System || moduleName == Staking || moduleName == Balances || moduleName == TransactionPayment) {
 		return extrinsic, nil
 	}
 
-	eventValue := se.Event.Values[0]
-	switch eventValue.Values.(type) {
+	eventValue := se.Event.Values[0].Values
+	switch eventValue.(type) {
 	case map[string]interface{}:
-		value := DefaultEventValue()
-		err := ObjToObj(eventValue.Values, &value)
-		if err != nil {
-			return nil, fmt.Errorf("obj parse error: %v", err)
+		switch eventName {
+		case TransactionFeePaid:
+			transactionFeeEvent := DefaultTransactionFeeEvent()
+			err := ObjToObj(eventValue, &transactionFeeEvent)
+			if err != nil {
+				return nil, err
+			}
+			extrinsic.FeeInfo = transactionFeeEvent
+		default:
+			value := DefaultEventValue()
+			err := ObjToObj(eventValue, &value)
+			if err != nil {
+				return nil, fmt.Errorf("obj parse error: %v", err)
+			}
+			innerValue, err := Parse(value, networkId)
+			if err != nil {
+				return nil, fmt.Errorf("event parse error: %v", err)
+			}
+			extrinsic.From = innerValue.From
+			extrinsic.To = innerValue.To
+			extrinsic.Addr = innerValue.Who
+			extrinsic.Amount = innerValue.Amount
+			extrinsic.Value = innerValue.Value
 		}
-		innerValue, err := Parse(value, networkId)
-		if err != nil {
-			return nil, fmt.Errorf("event parse error: %v", err)
-		}
-		extrinsic.From = innerValue.From
-		extrinsic.To = innerValue.To
-		extrinsic.Addr = innerValue.Who
-		extrinsic.Amount = innerValue.Amount
-		extrinsic.Value = innerValue.Value
+
 	case []interface{}:
-		values := eventValue.Values.([]interface{})
+		values := eventValue.([]interface{})
 		if len(values) != 2 {
 			return nil, fmt.Errorf("length error")
 		}
@@ -113,6 +125,31 @@ func (se SystemEvent) Parse(networkId []byte) (*Extrinsic, error) {
 
 	}
 	return extrinsic, nil
+}
+
+type TransactionFeeParam struct {
+	ActualFee *big.Int `json:"actual_fee"`
+	Tip       *big.Int `json:"tip"`
+	Who       [][]byte `json:"who"`
+}
+
+func (tr *TransactionFeeParam) Parse(networkId []byte) (*big.Int, string, error) {
+	if len(tr.Who) != 1 {
+		return nil, "", fmt.Errorf("transaction fee who lenght ！=1")
+	}
+	address, err := PublicKeyToAddress(tr.Who[0], networkId)
+	if err != nil {
+		return nil, "", err
+	}
+	gasFee := big.NewInt(0).Add(tr.ActualFee, tr.Tip)
+	return gasFee, address, nil
+}
+
+func DefaultTransactionFeeEvent() TransactionFeeParam {
+	return TransactionFeeParam{
+		ActualFee: big.NewInt(0),
+		Tip:       big.NewInt(0),
+	}
 }
 
 type Phase struct {

@@ -48,6 +48,8 @@ const (
 	Deposit  EventID = "Deposit"
 	Withdraw EventID = "Withdraw"
 
+	TransactionFeePaid EventID = "TransactionFeePaid"
+
 	Withdrawn EventID = "Withdrawn"
 	Slashed   EventID = "Slashed"
 	Rewarded  EventID = "Rewarded"

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"subclient/types"
 	"testing"
+	"time"
 )
 
 const PLACK = 1000000000
@@ -15,6 +16,9 @@ var client *Client
 var err error
 var networkId = 42
 var networkIdBytes = []byte{42}
+
+//var wsEndpoint = "ws://127.0.0.1:9944"
+//var httpEndpoint = "http://127.0.0.1:9933"
 
 var wsEndpoint = "wss://mainnet.ternoa.network"
 var httpEndpoint = "http://127.0.0.1:9933"
@@ -72,7 +76,7 @@ func TestClient_PalletInfo(t *testing.T) {
 }
 
 func TestClient_Block(t *testing.T) {
-	block, err := client.Block(407)
+	block, err := client.Block(14)
 	if err != nil {
 		panic(err)
 	}
@@ -353,18 +357,92 @@ func TestClient_GetGenesisHash(t *testing.T) {
 	fmt.Println(hash)
 }
 
+func TestInfo(t *testing.T) {
+	//14fcLPyFxvPSv3mmGYmrNfg5Ln1otGbm8WeB7reeXwKPCb6K
+	for {
+		result, err := client.SignedExtrinsic(
+			"0x186c09cac19834761b573b238b6542257d05b1fc5a57688311345d8cdf7e488d",
+			"5FjKC4iC797yUWmFJuirEWqvVA2ABy3d41ugxZfHyrHs2AYx",
+			"113000000000000000000",
+			"0",
+		)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(result)
+		info, err := client.PaymentQueryInfo(result)
+		if err != nil {
+			panic(err)
+		}
+		//249980519847845907398656
+		//14900000086298341
+		fmt.Println(info.PartialFee)
+		time.Sleep(1000 * time.Millisecond)
+	}
+
+}
+
+func TestBlock(t *testing.T) {
+	extrinsics, err := client.Block(5358937)
+	if err != nil {
+		panic(err)
+	}
+	for _, ext := range extrinsics {
+		fmt.Println(ext)
+	}
+}
+
+func TestGasFee(t *testing.T) {
+	//14fcLPyFxvPSv3mmGYmrNfg5Ln1otGbm8WeB7reeXwKPCb6K
+	for {
+		result, err := client.SignedExtrinsic(
+			"0x186c09cac19834761b573b238b6542257d05b1fc5a57688311345d8cdf7e488d",
+			"5FjKC4iC797yUWmFJuirEWqvVA2ABy3d41ugxZfHyrHs2AYx",
+			"113000000000000000000",
+			"0",
+		)
+		if err != nil {
+			panic(err)
+		}
+		//fmt.Println(result)
+		info, err := client.PaymentQueryFeeDetails(result)
+		if err != nil {
+			panic(err)
+		}
+
+		adjustBig, err := ParseBigInt(info.InclusionFee.AdjustedWeightFee)
+		if err != nil {
+			panic(err)
+		}
+		lengthBig, err := ParseBigInt(info.InclusionFee.LenFee)
+		if err != nil {
+			panic(err)
+		}
+		baseBig, err := ParseBigInt(info.InclusionFee.BaseFee)
+		if err != nil {
+			panic(err)
+		}
+		gasFee := big.NewInt(0).Add(big.NewInt(0).Add(adjustBig, lengthBig), baseBig)
+		//249980519847845907398656
+		//14900000086298341
+		fmt.Println(gasFee.String())
+		time.Sleep(100 * time.Millisecond)
+	}
+
+}
+
 func TestClient_SignedExtrinsic(t *testing.T) {
 	//14fcLPyFxvPSv3mmGYmrNfg5Ln1otGbm8WeB7reeXwKPCb6K
 	result, err := client.SignedExtrinsic(
 		"0x186c09cac19834761b573b238b6542257d05b1fc5a57688311345d8cdf7e488d",
 		"5FjKC4iC797yUWmFJuirEWqvVA2ABy3d41ugxZfHyrHs2AYx",
 		"113000000000000000000",
-		"4",
+		"0",
 	)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(result)
+	//fmt.Println(result)
 	info, err := client.PaymentQueryInfo(result)
 	if err != nil {
 		panic(err)

@@ -40,7 +40,7 @@ func ObjToBytes(obj interface{}) ([][]byte, error) {
 		return nil, err
 	}
 	var value [][]byte
-	err = json.Unmarshal(bytes, &value)
+	err = Unmarshal(bytes, &value)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func ObjToBigInt(obj interface{}) (*big.Int, error) {
 		return nil, err
 	}
 	value := big.NewInt(0)
-	err = json.Unmarshal(bytes, &value)
+	err = Unmarshal(bytes, &value)
 	if err != nil {
 		return nil, err
 	}
@@ -63,11 +63,11 @@ func ObjToObj(obj interface{}, value interface{}) error {
 	if typeOf.Kind() != reflect.Ptr {
 		return fmt.Errorf("value is mutst pointer")
 	}
-	bytes, err := json.Marshal(obj)
+	data, err := json.Marshal(obj)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(bytes, value)
+	return Unmarshal(data, value)
 }
 
 func Marshal(obj interface{}) ([]byte, error) {

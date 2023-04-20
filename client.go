@@ -179,6 +179,11 @@ func (c *Client) PaymentQueryInfo(data string) (types.PaymentInfo, error) {
 	return result, c.call("payment_queryInfo", &result, []string{TrimSlash(data)})
 }
 
+func (c *Client) PaymentQueryFeeDetails(data string) (types.FeeDetails, error) {
+	var result types.FeeDetails
+	return result, c.call("payment_queryFeeDetails", &result, []string{TrimSlash(data)})
+}
+
 func (c *Client) StateGetStorage(key, hash string) (string, error) {
 	var result string
 	param := []string{key}
@@ -340,23 +345,50 @@ func (c *Client) ParseExtrinsic(height uint64, extrinsics []string, events []typ
 			continue
 		}
 		hexData, err := hex.DecodeString(strings.TrimPrefix(extData, "0x"))
+		if err != nil {
+			return nil, err
+		}
 		hashBytes, err := Hash256(hexData)
 		if err != nil {
 			return nil, err
+		}
+		gasFee, feeAddr, err := c.GetTxFee(filterEvents)
+		if err != nil {
+			//return nil, err
 		}
 		for index, event := range filterEvents {
 			extrinsic, err := event.Parse(c.networkIdBytes)
 			if err != nil {
 				continue
 			}
+			extrinsic.GasFee = gasFee
+			extrinsic.FeeAddr = feeAddr
 			extrinsic.Call = extCall.Call
 			extrinsic.Height = height
 			extrinsic.Index = index
 			extrinsic.Hash = fmt.Sprintf("0x%x", hashBytes)
 			tmpExtrinsic = append(tmpExtrinsic, extrinsic)
 		}
+
 	}
 	return tmpExtrinsic, nil
+}
+
+func (c *Client) GetTxFee(events []types.SystemEvent) (*big.Int, string, error) {
+	for _, event := range events {
+		extrinsic, err := event.Parse(c.networkIdBytes)
+		if err != nil {
+			return big.NewInt(0), "", err
+		}
+		if extrinsic.Module == types.TransactionPayment && extrinsic.Event == types.TransactionFeePaid {
+			gasFee, addr, err := extrinsic.FeeInfo.Parse(c.networkIdBytes)
+			if err != nil {
+				return big.NewInt(0), "", err
+			}
+			return gasFee, addr, nil
+		}
+	}
+	return big.NewInt(0), "", nil
 }
 
 func ContainerSuccessEvent(extId int, events []types.SystemEvent) bool {
@@ -554,7 +586,7 @@ func (c *Client) GetStorageInfoWithMetadata(palletName types.ModuleName, storage
 	if err != nil {
 		return err
 	}
-	//fmt.Printf("deoce data: %v \n", decodeData)
+	fmt.Printf("deoce data: %v \n", decodeData)
 	return types.Unmarshal([]byte(decodeData), value)
 
 }

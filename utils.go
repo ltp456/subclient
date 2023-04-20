@@ -247,3 +247,11 @@ func Big2Str(x *big.Int, decimal int) string {
 
 	return i + "." + d
 }
+
+// ParseBigInt parse hex string value to big.Int
+func ParseBigInt(value string) (*big.Int, error) {
+	i := big.NewInt(0)
+	_, err := fmt.Sscan(value, i)
+
+	return i, err
+}

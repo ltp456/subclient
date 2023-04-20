@@ -8,6 +8,20 @@ import (
 	"time"
 )
 
+//------
+
+type InclusionFee struct {
+	BaseFee           string `json:"baseFee"`
+	LenFee            string `json:"lenFee"`
+	AdjustedWeightFee string `json:"adjustedWeightFee"`
+}
+
+type FeeDetails struct {
+	InclusionFee InclusionFee `json:"inclusionFee"`
+}
+
+//-------------
+
 type ExtCall struct {
 	Module      ModuleName `json:"module"`
 	Call        CallId     `json:"call"`
