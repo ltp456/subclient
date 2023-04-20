@@ -369,7 +369,7 @@ func TestInfo(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(result)
+		//fmt.Println(result)
 		info, err := client.PaymentQueryInfo(result)
 		if err != nil {
 			panic(err)
@@ -377,7 +377,7 @@ func TestInfo(t *testing.T) {
 		//249980519847845907398656
 		//14900000086298341
 		fmt.Println(info.PartialFee)
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 }
@@ -388,7 +388,10 @@ func TestBlock(t *testing.T) {
 		panic(err)
 	}
 	for _, ext := range extrinsics {
-		fmt.Println(ext)
+		if ext.Module == types.Balances && ext.Event == types.Transfer {
+			fmt.Printf("from:%v,to:%v,amount:%v,gas:%v,height:%v,hash:%v,index:%v \n", ext.From, ext.To, ext.Amount, ext.GasFee.String(), ext.Height, ext.Hash, ext.Index)
+		}
+
 	}
 }
 
