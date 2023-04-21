@@ -62,7 +62,7 @@ func (c *Client) Init() error {
 		if err != nil {
 			return err
 		}
-		go ws.Run()
+		ws.Run()
 		go c.wsResp()
 		c.ws = ws
 
@@ -365,7 +365,8 @@ func (c *Client) ParseExtrinsic(height uint64, extrinsics []string, events []typ
 			extrinsic.FeeAddr = feeAddr
 			extrinsic.Call = extCall.Call
 			extrinsic.Height = height
-			extrinsic.Index = index
+			extrinsic.Index = extId
+			extrinsic.EventIndex = index
 			extrinsic.Hash = fmt.Sprintf("0x%x", hashBytes)
 			tmpExtrinsic = append(tmpExtrinsic, extrinsic)
 		}
@@ -374,8 +375,8 @@ func (c *Client) ParseExtrinsic(height uint64, extrinsics []string, events []typ
 	return tmpExtrinsic, nil
 }
 
-func (c *Client) GetTxFee(events []types.SystemEvent) (*big.Int, string, error) {
-	for _, event := range events {
+func (c *Client) GetTxFee(filterEvents []types.SystemEvent) (*big.Int, string, error) {
+	for _, event := range filterEvents {
 		extrinsic, err := event.Parse(c.networkIdBytes)
 		if err != nil {
 			return big.NewInt(0), "", err
@@ -586,7 +587,7 @@ func (c *Client) GetStorageInfoWithMetadata(palletName types.ModuleName, storage
 	if err != nil {
 		return err
 	}
-	fmt.Printf("deoce data: %v \n", decodeData)
+	//fmt.Printf("deoce data: %v \n", decodeData)
 	return types.Unmarshal([]byte(decodeData), value)
 
 }
@@ -614,7 +615,7 @@ func (c *Client) PalletInfo(palletName types.ModuleName, callName types.CallId, 
 		return nil, err
 	}
 	palletInfo := &types.PalletInfo{}
-	err = json.Unmarshal([]byte(res), palletInfo)
+	err = types.Unmarshal([]byte(res), palletInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -633,7 +634,7 @@ func (c *Client) DecodeExtrinsic(raw string) (*types.ExtCall, error) {
 	if err != nil {
 		return extCall, err
 	}
-	err = json.Unmarshal([]byte(res), extCall)
+	err = types.Unmarshal([]byte(res), extCall)
 	if err != nil {
 		return extCall, err
 	}

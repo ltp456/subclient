@@ -11,14 +11,15 @@ type Extrinsic struct {
 	To     string   `json:"to"`
 	Amount *big.Int `json:"amount"`
 
-	Hash    string     `json:"hash"`
-	Index   int        `json:"index"`
-	Height  uint64     `json:"height"`
-	Module  ModuleName `json:"module"`
-	Call    CallId     `json:"call"`
-	Event   EventID    `json:"event"`
-	GasFee  *big.Int
-	FeeAddr string
+	Hash       string     `json:"hash"`
+	Index      int        `json:"index"`
+	EventIndex int        `json:"eventIndex"`
+	Height     uint64     `json:"height"`
+	Module     ModuleName `json:"module"`
+	Call       CallId     `json:"call"`
+	Event      EventID    `json:"event"`
+	GasFee     *big.Int
+	FeeAddr    string
 
 	FeeInfo TransactionFeeParam `json:"fee"`
 

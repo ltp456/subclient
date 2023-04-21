@@ -15,13 +15,14 @@ type Ws struct {
 	endpoint    string
 	conn        *websocket.Conn
 	reConnectFn func() error
+	reTime      time.Time
+
 	option      *WsOption
 	lock        sync.Mutex
 	isReConning bool
 	writeMsg    chan []byte
 	readMsg     chan []byte
 	exitSign    chan string
-	heartTime   time.Duration
 }
 
 func NewWs(endpoint string) (*Ws, error) {
@@ -37,7 +38,7 @@ func NewWs(endpoint string) (*Ws, error) {
 		exitSign:    make(chan string, 1),
 		isReConning: false,
 		option:      DefaultOption(),
-		heartTime:   60 * time.Second,
+		reTime:      time.Now(),
 	}
 	return ws, nil
 }
@@ -45,7 +46,9 @@ func NewWs(endpoint string) (*Ws, error) {
 func (ws *Ws) Run() {
 	go ws.write()
 	go ws.read()
-
+	if ws.option.KeepAlive {
+		go ws.KeepAlive()
+	}
 }
 
 func (ws *Ws) WriteMessage(msg []byte) {
@@ -78,9 +81,6 @@ func (ws *Ws) Close() error {
 
 func (ws *Ws) write() {
 
-	ticker := time.NewTicker(ws.heartTime)
-	defer ticker.Stop()
-
 	for {
 		select {
 		case msg, ok := <-ws.writeMsg:
@@ -90,15 +90,6 @@ func (ws *Ws) write() {
 
 				}
 			}
-
-		case t := <-ticker.C:
-			err := ws.conn.WriteMessage(websocket.PingMessage, []byte(t.String()))
-			if err != nil {
-				reErr := ws.ReConnect()
-				if reErr != nil {
-				}
-			}
-
 		case <-ws.exitSign:
 			err := ws.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
@@ -110,51 +101,64 @@ func (ws *Ws) write() {
 }
 
 func (ws *Ws) read() {
-
 	for {
-		mType, message, err := ws.conn.ReadMessage()
+		_, message, err := ws.conn.ReadMessage()
 		if err != nil {
-
+			if ws.option.AutoReConn {
+				ws.reConnect()
+			}
+			time.Sleep(300 * time.Millisecond)
+			continue
 		}
-		switch mType {
-		case websocket.TextMessage:
-			ws.readMsg <- message
-		case websocket.PongMessage:
-
-		case websocket.CloseMessage:
-			ws.Close()
-			return
-		}
+		ws.readMsg <- message
 		select {
 		case <-ws.exitSign:
 			return
 		default:
 
 		}
-
 	}
 
 }
 
-func (ws *Ws) IsReConning() bool {
-	return ws.isReConning
+// KeepAlive send ping-pong
+func (ws *Ws) KeepAlive() {
+	ticker := time.NewTicker(ws.option.HeartTime)
+	lastResponse := time.Now()
+	ws.conn.SetPongHandler(func(msg string) error {
+		lastResponse = time.Now()
+		return nil
+	})
+	defer ticker.Stop()
+	for {
+		deadline := time.Now().Add(10 * time.Second)
+		err := ws.conn.WriteControl(websocket.PingMessage, []byte{}, deadline)
+		if err != nil {
+
+		}
+		<-ticker.C
+		if time.Since(lastResponse) > ws.option.HeartTime {
+			ws.conn.Close()
+			//return
+		}
+	}
 }
 
 func (ws *Ws) SetReConnFn(fn func() error) {
 	ws.reConnectFn = fn
 }
 
-func (ws *Ws) ReConnect() error {
-	if !ws.option.CanReConn {
+func (ws *Ws) reConnect() error {
+	if !ws.option.AutoReConn && time.Since(ws.reTime) > ws.option.HeartTime {
 		return nil
 	}
-	if ws.IsReConning() {
+	if ws.isReConning {
 		return nil
 	}
 	ws.lock.Lock()
 	defer ws.lock.Unlock()
-	// 需要再次判断，并发时防止多次重连
-	if ws.IsReConning() {
+
+	if ws.isReConning {
 		return nil
 	}
 	ws.isReConning = true
@@ -167,6 +171,7 @@ func (ws *Ws) ReConnect() error {
 		_ = ws.reConnectFn()
 	}
 	ws.isReConning = false
+	ws.reTime = time.Now()
 	return nil
 
 }
@@ -186,5 +191,6 @@ func newWebsocketConn(endpoint string) (*websocket.Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ws dial error: %v", err)
 	}
+	conn.SetReadLimit(655350)
 	return conn, nil
 }

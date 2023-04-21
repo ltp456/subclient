@@ -33,7 +33,7 @@ func init() {
 		NetworkId:    networkId,
 		NetworkBytes: networkIdBytes,
 		WsSwitch:     true,
-		Debug:        false,
+		Debug:        true,
 	}
 	client, err = NewClient(option)
 	if err != nil {
