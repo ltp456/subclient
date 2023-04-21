@@ -33,7 +33,7 @@ func init() {
 		NetworkId:    networkId,
 		NetworkBytes: networkIdBytes,
 		WsSwitch:     true,
-		Debug:        true,
+		Debug:        false,
 	}
 	client, err = NewClient(option)
 	if err != nil {
@@ -47,12 +47,13 @@ func TestClient_scanBlock(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	height = 5360125
 	for i := height; i < 10000000000000; i++ {
 		extrinsics, err := client.Block(uint64(i))
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("len: %v %v %v  \n", extrinsics[0].Hash, i, len(extrinsics))
+		fmt.Printf("height: %v, len: %v \n", i, len(extrinsics))
 		for _, item := range extrinsics {
 			if item.Module == types.Balances && item.Event == types.Transfer {
 				fmt.Printf("%v \n", item)
