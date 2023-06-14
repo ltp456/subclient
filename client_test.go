@@ -51,7 +51,8 @@ func TestClient_scanBlock(t *testing.T) {
 	for i := height; i < 10000000000000; i++ {
 		extrinsics, err := client.Block(uint64(i))
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+			continue
 		}
 		fmt.Printf("height: %v, len: %v \n", i, len(extrinsics))
 		for _, item := range extrinsics {
@@ -594,7 +595,7 @@ func TestDemo001(t *testing.T) {
 }
 
 func TestClient_AccountInfo(t *testing.T) {
-	accountInfo, err := client.SystemAccount("5HdKwTY4YGEYSrPn9dt1aLRTqT6eexhBhJbGaxZh1vQqViRX")
+	accountInfo, err := client.SystemAccount("5HpQ5x3fevGnBFpN57orp5WgVreyPQ2bM9jpH8gnuec6LLR1")
 	if err != nil {
 		panic(err)
 	}

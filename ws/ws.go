@@ -33,8 +33,8 @@ func NewWs(endpoint string) (*Ws, error) {
 	ws := &Ws{
 		conn:        conn,
 		endpoint:    endpoint,
-		writeMsg:    make(chan []byte, 1000),
-		readMsg:     make(chan []byte, 1000),
+		writeMsg:    make(chan []byte, 1),
+		readMsg:     make(chan []byte, 1),
 		exitSign:    make(chan string, 1),
 		isReConning: false,
 		option:      DefaultOption(),
@@ -139,7 +139,9 @@ func (ws *Ws) KeepAlive() {
 		<-ticker.C
 		if time.Since(lastResponse) > ws.option.HeartTime {
 			ws.conn.Close()
-			//return
+			if ws.option.AutoReConn {
+				ws.reConnect()
+			}
 		}
 	}
 }
@@ -149,7 +151,8 @@ func (ws *Ws) SetReConnFn(fn func() error) {
 }
 
 func (ws *Ws) reConnect() error {
-	if !ws.option.AutoReConn && time.Since(ws.reTime) > ws.option.HeartTime {
+	fmt.Printf("start re connect now %v \n", time.Now())
+	if !ws.option.AutoReConn || time.Since(ws.reTime) < ws.option.HeartTime {
 		return nil
 	}
 	if ws.isReConning {
